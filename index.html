@@ -1,0 +1,2441 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FocusFlow — Study Tracker & Academic Planner</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect x='6' y='6' width='116' height='116' rx='34' fill='%23E56343'/%3E%3Cpath d='M64 34L24 53L64 72L104 53L64 34Z' fill='%23FFFFFF'/%3E%3Cpath d='M40 64.5V80.5C40 87.5 50.7 93 64 93C77.3 93 88 87.5 88 80.5V64.5L64 76L40 64.5Z' fill='%23FFF4F0'/%3E%3Cpath d='M96 56.5V79' stroke='%23F3C152' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='96' cy='83' r='4.5' fill='%23F3C152'/%3E%3C/svg%3E" />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans, Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            coral: {
+              50: '#FFF4F0',
+              100: '#FFE4DB',
+              200: '#FFC7B5',
+              400: '#F17A5C',
+              500: '#E56343',
+              600: '#D14F30',
+            },
+            amberwarm: {
+              100: '#FEF3D6',
+              400: '#F3C152',
+              500: '#E8B038',
+            },
+            cream: {
+              50: '#FAF6F4',
+              100: '#F5ECE8',
+              200: '#EDE0DA',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom scrollbar & smooth transitions */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(229, 99, 67, 0.25);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(229, 99, 67, 0.45);
+    }
+
+    .timer-ring-circle {
+      transition: stroke-dashoffset 0.5s linear;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+    }
+
+    /* Eduhive-inspired diagonal hatch stripes for Study Statistics bars */
+    .bar-stripe-coral {
+      background-color: #E56343;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.32),
+        rgba(255, 255, 255, 0.32) 4px,
+        transparent 4px,
+        transparent 8px
+      );
+    }
+
+    .bar-stripe-amber {
+      background-color: #F3C152;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.42),
+        rgba(255, 255, 255, 0.42) 4px,
+        transparent 4px,
+        transparent 8px
+      );
+    }
+
+    /* Soft warm aura backdrop matching the reference card frame */
+    .warm-canvas-bg {
+      background: linear-gradient(145deg, #F5ECE8 0%, #FAF6F4 45%, #F7EAE4 100%);
+    }
+    .dark .warm-canvas-bg {
+      background: linear-gradient(145deg, #131110 0%, #181514 50%, #1C1715 100%);
+    }
+  </style>
+</head>
+<body class="warm-canvas-bg text-stone-800 dark:text-stone-100 min-h-screen flex flex-col transition-colors duration-200 selection:bg-[#E56343] selection:text-white">
+
+  <!-- Toast / Message Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <!-- Mobile Top Header (Shown on screens smaller than lg) -->
+  <header class="lg:hidden sticky top-0 z-30 bg-white/90 dark:bg-stone-900/90 backdrop-blur-md border-b border-stone-200/80 dark:border-stone-800 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#F17A5C] to-[#E56343] flex items-center justify-center text-white shadow-sm">
+        <i class="fa-solid fa-graduation-cap text-sm"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-base tracking-tight leading-none text-stone-900 dark:text-white">FocusFlow</h1>
+        <p class="text-[11px] text-stone-400 font-medium mt-0.5">Student Dashboard</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button onclick="openModal('data-modal')" title="Backup & Sample Data" class="w-9 h-9 rounded-full bg-[#FAF6F4] dark:bg-stone-800 text-stone-600 dark:text-stone-300 flex items-center justify-center border border-stone-200/70 dark:border-stone-700">
+        <i class="fa-solid fa-database text-xs"></i>
+      </button>
+      <button onclick="toggleTheme()" title="Toggle Theme" class="w-9 h-9 rounded-full bg-[#FAF6F4] dark:bg-stone-800 text-stone-600 dark:text-stone-300 flex items-center justify-center border border-stone-200/70 dark:border-stone-700">
+        <i id="theme-icon-mobile" class="fa-solid fa-moon text-xs"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main App Shell: Floating Left Sidebar + Content Frame -->
+  <div class="flex-1 max-w-[1440px] w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col lg:flex-row gap-6">
+
+    <!-- ==================== FLOATING LEFT SIDEBAR (Desktop) ==================== -->
+    <aside class="hidden lg:flex flex-col justify-between w-64 shrink-0 bg-white dark:bg-stone-900 rounded-[28px] p-5 shadow-[0_12px_36px_-10px_rgba(120,72,56,0.08)] dark:shadow-none border border-white/80 dark:border-stone-800 sticky top-6 h-[calc(100vh-3rem)]">
+      <div>
+        <!-- Brand Header -->
+        <div class="flex items-center gap-3 px-2 pt-1 pb-6">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#F38164] to-[#E56343] flex items-center justify-center text-white shadow-md shadow-[#E56343]/25">
+            <i class="fa-solid fa-graduation-cap text-base"></i>
+          </div>
+          <div>
+            <h1 class="font-extrabold text-lg tracking-tight leading-none text-stone-900 dark:text-white">FocusFlow</h1>
+            <p class="text-[11px] text-stone-400 font-medium mt-1">Student Dashboard</p>
+          </div>
+        </div>
+
+        <!-- MAIN MENU -->
+        <div class="space-y-1">
+          <p class="px-3 pb-2 text-[10px] font-bold uppercase tracking-widest text-stone-400">Main Menu</p>
+          <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-btn w-full px-4 py-3 rounded-2xl text-sm font-semibold transition-all flex items-center gap-3">
+            <i class="fa-solid fa-table-cells-large w-4 text-center"></i>
+            <span>Dashboard</span>
+          </button>
+          <button onclick="switchTab('subjects')" data-tab="subjects" class="nav-btn w-full px-4 py-3 rounded-2xl text-sm font-semibold transition-all flex items-center gap-3">
+            <i class="fa-regular fa-folder-open w-4 text-center"></i>
+            <span>My Courses</span>
+          </button>
+          <button onclick="switchTab('tasks')" data-tab="tasks" class="nav-btn w-full px-4 py-3 rounded-2xl text-sm font-semibold transition-all flex items-center gap-3">
+            <i class="fa-regular fa-clipboard w-4 text-center"></i>
+            <span>Assignments</span>
+          </button>
+          <button onclick="switchTab('analytics')" data-tab="analytics" class="nav-btn w-full px-4 py-3 rounded-2xl text-sm font-semibold transition-all flex items-center gap-3">
+            <i class="fa-solid fa-chart-simple w-4 text-center"></i>
+            <span>Progress</span>
+          </button>
+        </div>
+
+        <!-- OTHER MENU -->
+        <div class="space-y-1 mt-7">
+          <p class="px-3 pb-2 text-[10px] font-bold uppercase tracking-widest text-stone-400">Other Menu</p>
+          <button onclick="openModal('timer-settings-modal')" class="w-full px-4 py-2.5 rounded-2xl text-sm font-medium text-stone-500 dark:text-stone-400 hover:bg-[#FAF6F4] dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-100 transition-all flex items-center gap-3">
+            <i class="fa-solid fa-sliders w-4 text-center"></i>
+            <span>Timer Settings</span>
+          </button>
+          <button onclick="openModal('data-modal')" class="w-full px-4 py-2.5 rounded-2xl text-sm font-medium text-stone-500 dark:text-stone-400 hover:bg-[#FAF6F4] dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-100 transition-all flex items-center gap-3">
+            <i class="fa-solid fa-database w-4 text-center"></i>
+            <span>Data & Backup</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Mode Pill Switcher (Matching reference Light / Dark pill toggle) -->
+      <div class="pt-4 border-t border-stone-100 dark:border-stone-800">
+        <p class="px-2 pb-2 text-[10px] font-bold uppercase tracking-widest text-stone-400">Mode</p>
+        <div class="bg-[#FAF6F4] dark:bg-stone-800 p-1.5 rounded-full flex items-center gap-1 border border-stone-200/60 dark:border-stone-700">
+          <button id="mode-pill-light" onclick="setThemeMode('light')" class="flex-1 py-2 px-3 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all">
+            <i class="fa-solid fa-sun text-[11px]"></i> Light
+          </button>
+          <button id="mode-pill-dark" onclick="setThemeMode('dark')" class="flex-1 py-2 px-3 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all">
+            <i class="fa-solid fa-moon text-[11px]"></i> Dark
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================== RIGHT MAIN WORKSPACE ==================== -->
+    <main class="flex-1 min-w-0 space-y-5 pb-20 lg:pb-4">
+
+      <!-- Top Welcome Bar (Matching the rounded white greeting bar in reference) -->
+      <div class="bg-white dark:bg-stone-900 rounded-[24px] px-5 sm:px-6 py-4 shadow-[0_8px_28px_-12px_rgba(120,72,56,0.06)] dark:shadow-none border border-white/80 dark:border-stone-800 flex items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold text-stone-900 dark:text-white flex items-center gap-2">
+            Welcome Back <span class="text-xl">👋</span>
+          </h2>
+          <p class="text-xs text-stone-400 mt-0.5">Let's learn something new and hit your focus goals today!</p>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <button onclick="openModal('manual-session-modal')" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FAF6F4] dark:bg-stone-800 hover:bg-[#FFE4DB] dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-xs font-semibold transition-colors border border-stone-200/60 dark:border-stone-700">
+            <i class="fa-solid fa-plus text-[#E56343]"></i> Quick Log
+          </button>
+          <button onclick="openModal('timer-settings-modal')" title="Timer Preferences" class="w-10 h-10 rounded-full bg-[#FAF6F4] dark:bg-stone-800 hover:bg-[#FFE4DB] dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300 flex items-center justify-center transition-colors border border-stone-200/60 dark:border-stone-700">
+            <i class="fa-solid fa-sliders text-xs"></i>
+          </button>
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#F3C152] to-[#E56343] text-white font-bold text-xs flex items-center justify-center shadow-sm">
+            FF
+          </div>
+        </div>
+      </div>
+
+      <!-- Demo Data Notice Banner -->
+      <div id="demo-data-banner" class="hidden bg-white/95 dark:bg-stone-900/95 border border-[#FFC7B5] dark:border-[#E56343]/40 rounded-[22px] p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-start sm:items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-[#FFF4F0] dark:bg-[#E56343]/20 text-[#E56343] flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+            <i class="fa-solid fa-triangle-exclamation text-base"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-stone-900 dark:text-white">You are currently viewing sample demo data</h3>
+            <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+              Clear the sample courses, tasks, and logs to start fresh with your own academic schedule, or manage backups anytime in <strong>Data &amp; Backup</strong>.
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+          <button onclick="clearDemoDataFromBanner()" class="px-4 py-2 rounded-full bg-[#E56343] hover:bg-[#D14F30] text-white text-xs font-semibold shadow-sm transition-colors flex items-center gap-1.5">
+            <i class="fa-solid fa-broom"></i> Clear Demo Data &amp; Start Fresh
+          </button>
+          <button onclick="dismissDemoBanner()" class="px-3.5 py-2 rounded-full bg-[#FAF6F4] hover:bg-stone-200/70 dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300 text-xs font-medium transition-colors">
+            Dismiss
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 1: DASHBOARD & FOCUS TIMER ==================== -->
+      <section id="tab-dashboard" class="tab-content space-y-5">
+
+        <!-- Top Bento Row: Active Focus Session Card + Progress Summary + Activity Dots + Motivational Banner -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+
+          <!-- Card 1: Focus Timer & Stopwatch Studio (Col 5) -->
+          <div class="md:col-span-5 bg-white dark:bg-stone-900 rounded-[24px] p-5 shadow-[0_8px_28px_-12px_rgba(120,72,56,0.06)] dark:shadow-none border border-white/80 dark:border-stone-800 flex flex-col justify-between">
+            <div>
+              <!-- Mode Selector Pills -->
+              <div class="flex flex-wrap items-center gap-1 bg-[#FAF6F4] dark:bg-stone-800 p-1 rounded-full mb-4">
+                <button onclick="setTimerMode('focus')" id="mode-focus" class="timer-mode-btn flex-1 py-1.5 px-2.5 rounded-full text-[11px] font-bold transition-all">Focus</button>
+                <button onclick="setTimerMode('shortBreak')" id="mode-shortBreak" class="timer-mode-btn flex-1 py-1.5 px-2.5 rounded-full text-[11px] font-bold transition-all">Short</button>
+                <button onclick="setTimerMode('longBreak')" id="mode-longBreak" class="timer-mode-btn flex-1 py-1.5 px-2.5 rounded-full text-[11px] font-bold transition-all">Long</button>
+                <button onclick="setTimerMode('stopwatch')" id="mode-stopwatch" class="timer-mode-btn flex-1 py-1.5 px-2.5 rounded-full text-[11px] font-bold transition-all flex items-center justify-center gap-1">
+                  <i class="fa-solid fa-stopwatch text-[10px]"></i> Watch
+                </button>
+              </div>
+
+              <!-- Circular Ring & Live Clock -->
+              <div class="flex flex-col items-center justify-center my-2">
+                <div class="relative w-44 h-44 flex items-center justify-center">
+                  <svg class="w-full h-full" viewBox="0 0 220 220">
+                    <circle cx="110" cy="110" r="96" stroke="currentColor" stroke-width="10" fill="transparent" class="text-[#FAF6F4] dark:text-stone-800" />
+                    <circle id="timer-progress-ring" cx="110" cy="110" r="96" stroke="currentColor" stroke-width="10" stroke-linecap="round" fill="transparent"
+                      stroke-dasharray="603.18" stroke-dashoffset="0"
+                      class="timer-ring-circle text-[#E56343]" />
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-3">
+                    <span id="timer-status-badge" class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#FFF4F0] text-[#E56343] dark:bg-[#E56343]/20 mb-1">
+                      Focus Session
+                    </span>
+                    <div id="timer-display" class="font-mono text-3xl sm:text-4xl font-bold tracking-tight text-stone-900 dark:text-white">25:00</div>
+                    <p id="timer-active-subject-label" class="text-[11px] text-stone-400 mt-1 max-w-[130px] truncate">Select subject</p>
+                  </div>
+                </div>
+
+                <!-- Stopwatch Laps -->
+                <div id="stopwatch-laps-container" class="hidden w-full mt-3 bg-[#FAF6F4] dark:bg-stone-800/70 rounded-2xl p-2.5">
+                  <div class="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-stone-400 pb-1 mb-1 border-b border-stone-200/70 dark:border-stone-700 px-2">
+                    <span>Lap</span>
+                    <span>Split</span>
+                    <span>Total</span>
+                  </div>
+                  <div id="stopwatch-laps-list" class="max-h-20 overflow-y-auto space-y-1 text-[11px] font-mono px-1"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subject & Controls -->
+            <div class="space-y-2.5 pt-2">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <select id="timer-subject-select" onchange="updateActiveSubjectLabel()" class="w-full rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-3.5 py-2 text-xs font-semibold text-stone-700 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-[#E56343]"></select>
+                <input id="timer-session-note" type="text" placeholder="Session goal note..." class="w-full rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-3.5 py-2 text-xs text-stone-700 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-[#E56343]" />
+              </div>
+
+              <div class="flex items-center gap-2 pt-1">
+                <button id="timer-start-btn" onclick="toggleTimer()" class="flex-1 bg-[#E56343] hover:bg-[#D14F30] text-white font-semibold py-2.5 px-4 rounded-full text-xs shadow-md shadow-[#E56343]/20 transition-all flex items-center justify-center gap-2">
+                  <i class="fa-solid fa-play"></i> <span>Start Focus</span>
+                </button>
+                <button id="stopwatch-lap-btn" onclick="recordStopwatchLap()" class="hidden py-2.5 px-3.5 rounded-full bg-[#FEF3D6] dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-xs font-bold transition-colors" title="Record Lap">
+                  <i class="fa-solid fa-flag"></i>
+                </button>
+                <button onclick="resetTimer()" class="w-9 h-9 rounded-full bg-[#FAF6F4] dark:bg-stone-800 hover:bg-stone-200/70 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300 flex items-center justify-center transition-colors shrink-0" title="Reset">
+                  <i class="fa-solid fa-rotate-left text-xs"></i>
+                </button>
+                <button id="timer-finish-btn" onclick="completeSessionEarly()" class="py-2.5 px-3.5 rounded-full border border-[#FFC7B5] dark:border-[#E56343]/40 text-[#E56343] hover:bg-[#FFF4F0] dark:hover:bg-[#E56343]/15 text-xs font-semibold transition-colors flex items-center gap-1.5 shrink-0" title="Log session now">
+                  <i class="fa-solid fa-check"></i> Log
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Progress Summary (Col 3 - Matching the 3 stacked icon metrics in reference) -->
+          <div class="md:col-span-3 bg-white dark:bg-stone-900 rounded-[24px] p-5 shadow-[0_8px_28px_-12px_rgba(120,72,56,0.06)] dark:shadow-none border border-white/80 dark:border-stone-800 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-base text-stone-900 dark:text-white">Progress</h3>
+              <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#FAF6F4] dark:bg-stone-800 text-stone-500">This Week</span>
+            </div>
+
+            <div class="space-y-4 my-auto">
+              <!-- Metric 1: Today's Focus -->
+              <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-full bg-[#FFF4F0] dark:bg-[#E56343]/20 text-[#E56343] flex items-center justify-center shrink-0">
+                  <i class="fa-solid fa-clock text-sm"></i>
+                </div>
+                <div>
+                  <p id="kpi-today-hours" class="font-bold text-base text-stone-900 dark:text-white leading-tight">0.0 hours</p>
+                  <p id="kpi-today-sessions" class="text-[11px] text-stone-400 mt-0.5">0 sessions today</p>
+                </div>
+              </div>
+
+              <!-- Metric 2: Tasks Completed -->
+              <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-full bg-[#FEF3D6] dark:bg-amber-500/20 text-[#E8B038] flex items-center justify-center shrink-0">
+                  <i class="fa-solid fa-circle-check text-sm"></i>
+                </div>
+                <div>
+                  <p id="kpi-tasks-done" class="font-bold text-base text-stone-900 dark:text-white leading-tight">0 / 0 tasks</p>
+                  <p id="kpi-tasks-pending" class="text-[11px] text-stone-400 mt-0.5">0 pending items</p>
+                </div>
+              </div>
+
+              <!-- Metric 3: Active Courses -->
+              <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-full bg-[#FFF4F0] dark:bg-[#E56343]/20 text-[#E56343] flex items-center justify-center shrink-0">
+                  <i class="fa-solid fa-book-open text-sm"></i>
+                </div>
+                <div>
+                  <p id="kpi-courses-count" class="font-bold text-base text-stone-900 dark:text-white leading-tight">0 Courses</p>
+                  <p id="kpi-weekly-hours" class="text-[11px] text-stone-400 mt-0.5">0.0 / 0.0 hrs target</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Your Activity & Dotted Matrix (Col 4 - Matching "Your Activity: 17 Days" + dot matrix) -->
+          <div class="md:col-span-4 bg-white dark:bg-stone-900 rounded-[24px] p-5 shadow-[0_8px_28px_-12px_rgba(120,72,56,0.06)] dark:shadow-none border border-white/80 dark:border-stone-800 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-base text-stone-900 dark:text-white">Your Activity</h3>
+                <span class="text-[11px] font-semibold text-[#E56343] bg-[#FFF4F0] dark:bg-[#E56343]/20 px-2.5 py-0.5 rounded-full">
+                  <i class="fa-solid fa-fire mr-1"></i>Streak
+                </span>
+              </div>
+
+              <div class="mt-3 flex items-baseline gap-2">
+                <span id="kpi-streak" class="text-3xl font-extrabold text-stone-900 dark:text-white">0</span>
+                <span class="text-sm font-semibold text-stone-500 dark:text-stone-400">Days</span>
+              </div>
+              <p id="kpi-total-time-subtitle" class="text-xs text-stone-400 mt-1">0 hours 0 minutes total logged</p>
+            </div>
+
+            <!-- 28-Day Visual Dot Grid (Coral/Gold active dots vs Soft Neutral dots) -->
+            <div class="mt-4 pt-3 border-t border-stone-100 dark:border-stone-800">
+              <div id="activity-dot-matrix" class="grid grid-cols-7 gap-2 justify-items-center">
+                <!-- Populated by JS -->
+              </div>
+              <div class="flex items-center justify-between text-[10px] text-stone-400 mt-3">
+                <span>Last 28 days consistency</span>
+                <span class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-[#F3C152]"></span> Active
+                  <span class="w-2 h-2 rounded-full bg-stone-200 dark:bg-stone-700 ml-1"></span> Rest
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Middle Bento Row: Study Statistics Striped Bar Chart (Left 7) + Weekly Target Radial Ring (Right 5) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+          <!-- Study Statistics Bar Chart with Diagonal Stripes -->
+          <div class="lg:col-span-7 bg-white dark:bg-stone-900 rounded-[24px] p-6 shadow-[0_8px_28px_-12px_rgba(120,72,56,0.06)] dark:shadow-none border border-white/80 dark:border-stone-800">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+              <div>
+                <h3 class="font-bold text-base text-stone-900 dark:text-white">Study Statistics</h3>
+                <p class="text-xs text-stone-400 mt-0.5">Focus hours across the last 7 days</p>
+              </div>
+              <div class="flex items-center gap-1 bg-[#FAF6F4] dark:bg-stone-800 p-1 rounded-full">
+                <button onclick="setChartMode('daily')" id="dash-chart-daily" class="px-3 py-1 rounded-full text-xs font-semibold transition-all bg-white dark:bg-stone-700 text-stone-900 dark:text-white shadow-sm">Weekly</button>
+                <button onclick="setChartMode('subject')" id="dash-chart-subject" class="px-3 py-1 rounded-full text-xs font-semibold transition-all text-stone-500 dark:text-stone-400">By Course</button>
+              </div>
+            </div>
+
+            <!-- Bar Canvas -->
+            <div id="dashboard-striped-chart" class="h-52 flex items-end justify-between gap-3 sm:gap-5 pt-6 pb-2 px-2 border-b border-stone-100 dark:border-stone-800">
+              <!-- Populated by JS -->
+            </div>
+            <div id="dashboard-striped-labels" class="flex justify-between gap-3 sm:gap-5 pt-2.5 px-2 text-xs font-semibold text-stone-400">
+              <!-- Populated by JS -->
+            </div>
+
+            <!-- Legend matching reference ("Active" coral dot & "Goal" amber dot) -->
+            <div class="flex items-center gap-5 mt-4 pt-3 border-t border-stone-100 dark:border-stone-800 text-xs font-medium text-stone-500">
+              <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-[#E56343]"></span> High Focus (&ge; 1h)</span>
+              <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-[#F3C152]"></span> Light Study (&lt; 1h)</span>
+            </div>
+          </div>
+
+          <!-- Learn Tracking / Weekly Target Gauge & Quick Course Progress (Right 5) -->
+          <div class="lg:col-span-5 bg-white dark:bg-stone-900 rounded-[24px] p-6 shadow-[0_8px_28px_-12px_rgba(120,72,56,0.06)] dark:shadow-none border border-white/80 dark:border-stone-800 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+              <div>
+                <h3 class="font-bold text-base text-stone-900 dark:text-white">Learn Tracking</h3>
+                <p class="text-xs text-stone-400 mt-0.5">Weekly study target completion</p>
+              </div>
+              <button onclick="switchTab('subjects')" class="text-xs font-semibold text-[#E56343] hover:underline">Courses &rarr;</button>
+            </div>
+
+            <!-- Concentric Multi-Ring SVG matching the "Learn tracking 16% Goal Distance" aesthetic -->
+            <div class="flex items-center justify-center my-2">
+              <div class="relative w-44 h-44 flex items-center justify-center">
+                <svg class="w-full h-full -rotate-90" viewBox="0 0 180 180">
+                  <!-- Outer Track & Coral Ring (Weekly Hours Goal) -->
+                  <circle cx="90" cy="90" r="74" stroke="currentColor" stroke-width="10" fill="transparent" class="text-[#FAF6F4] dark:text-stone-800" />
+                  <circle id="learn-ring-hours" cx="90" cy="90" r="74" stroke="#E56343" stroke-width="10" stroke-linecap="round" fill="transparent" stroke-dasharray="464.95" stroke-dashoffset="300" />
+                  <!-- Middle Track & Golden Amber Ring (Syllabus Completion) -->
+                  <circle cx="90" cy="90" r="56" stroke="currentColor" stroke-width="10" fill="transparent" class="text-[#FAF6F4] dark:text-stone-800" />
+                  <circle id="learn-ring-syllabus" cx="90" cy="90" r="56" stroke="#F3C152" stroke-width="10" stroke-linecap="round" fill="transparent" stroke-dasharray="351.85" stroke-dashoffset="220" />
+                  <!-- Inner Track & Rose Ring (Tasks Done) -->
+                  <circle cx="90" cy="90" r="38" stroke="currentColor" stroke-width="10" fill="transparent" class="text-[#FAF6F4] dark:text-stone-800" />
+                  <circle id="learn-ring-tasks" cx="90" cy="90" r="38" stroke="#F17A5C" stroke-width="10" stroke-linecap="round" fill="transparent" stroke-dasharray="238.76" stroke-dashoffset="150" />
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span id="kpi-weekly-progress" class="text-2xl font-extrabold text-stone-900 dark:text-white">0%</span>
+                  <span class="text-[10px] font-semibold text-stone-400">Weekly Goal</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3 Legend Dots matching reference (Month / Week / Day style) -->
+            <div class="grid grid-cols-3 gap-2 pt-3 border-t border-stone-100 dark:border-stone-800 text-center">
+              <div>
+                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-700 dark:text-stone-300">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#E56343]"></span> Hours
+                </span>
+                <p id="ring-label-hours" class="text-[11px] text-stone-400 mt-0.5">0%</p>
+              </div>
+              <div>
+                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-700 dark:text-stone-300">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#F3C152]"></span> Syllabus
+                </span>
+                <p id="ring-label-syllabus" class="text-[11px] text-stone-400 mt-0.5">0%</p>
+              </div>
+              <div>
+                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-700 dark:text-stone-300">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#F17A5C]"></span> Tasks
+                </span>
+                <p id="ring-label-tasks" class="text-[11px] text-stone-400 mt-0.5">0%</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Bottom Bento Row: Priority Assignments List (Left 7) + Course Goals Progress (Right 5) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+          <!-- Priority Assignments Card (Styled like "Top Mentors" clean list rows) -->
+          <div class="lg:col-span-7 bg-white dark:bg-stone-900 rounded-[24px] p-6 shadow-[0_8px_28px_-12px_rgba(120,72,56,0.06)] dark:shadow-none border border-white/80 dark:border-stone-800">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-base text-stone-900 dark:text-white">Priority Assignments</h3>
+              <button onclick="switchTab('tasks')" class="px-3 py-1 rounded-full bg-[#FAF6F4] dark:bg-stone-800 hover:bg-[#FFE4DB] text-xs font-semibold text-stone-600 dark:text-stone-300 transition-colors">View all</button>
+            </div>
+
+            <!-- Quick Add Pill Input -->
+            <form onsubmit="quickAddTaskDashboard(event)" class="flex gap-2 mb-4">
+              <input id="dash-quick-task" type="text" required placeholder="Add a quick assignment or study task..." class="flex-1 rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-4 py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#E56343]" />
+              <button type="submit" class="bg-[#E56343] hover:bg-[#D14F30] text-white px-5 py-2.5 rounded-full text-xs font-semibold shadow-sm transition-colors">
+                + Add
+              </button>
+            </form>
+
+            <div id="dashboard-tasks-list" class="divide-y divide-stone-100 dark:divide-stone-800 max-h-[240px] overflow-y-auto pr-1">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Active Courses Progress Card (Styled like "Design principle fundamental" progress bar card) -->
+          <div class="lg:col-span-5 bg-white dark:bg-stone-900 rounded-[24px] p-6 shadow-[0_8px_28px_-12px_rgba(120,72,56,0.06)] dark:shadow-none border border-white/80 dark:border-stone-800 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-base text-stone-900 dark:text-white">Course Progress</h3>
+                <button onclick="openSubjectModal()" class="text-xs font-semibold text-[#E56343] hover:underline">+ New Course</button>
+              </div>
+              <div id="dashboard-subject-progress" class="space-y-4 max-h-[240px] overflow-y-auto pr-1">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+
+            <button onclick="switchTab('subjects')" class="mt-5 w-full py-2.5 px-4 rounded-full border border-[#FFC7B5] dark:border-[#E56343]/40 text-[#E56343] hover:bg-[#FFF4F0] dark:hover:bg-[#E56343]/15 text-xs font-semibold transition-colors flex items-center justify-between">
+              <span>Continue learning & manage syllabus</span>
+              <i class="fa-solid fa-play text-[10px]"></i>
+            </button>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ==================== TAB 2: MY COURSES & SYLLABUS ==================== -->
+      <section id="tab-subjects" class="tab-content hidden space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-stone-900 p-6 rounded-[24px] shadow-[0_8px_28px_-12px_rgba(120,72,56,0.06)] dark:shadow-none border border-white/80 dark:border-stone-800">
+          <div>
+            <h2 class="text-xl font-bold text-stone-900 dark:text-white">My Courses & Syllabus Tracker</h2>
+            <p class="text-xs sm:text-sm text-stone-400 mt-0.5">Organize subjects, weekly hour goals, and chapter checklists.</p>
+          </div>
+          <button onclick="openSubjectModal()" class="bg-[#E56343] hover:bg-[#D14F30] text-white font-semibold px-5 py-2.5 rounded-full text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2">
+            <i class="fa-solid fa-plus"></i> Add Course
+          </button>
+        </div>
+
+        <div id="subjects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- ==================== TAB 3: ASSIGNMENTS & DAILY TASKS ==================== -->
+      <section id="tab-tasks" class="tab-content hidden space-y-5">
+        <div class="bg-white dark:bg-stone-900 p-6 rounded-[24px] shadow-[0_8px_28px_-12px_rgba(120,72,56,0.06)] dark:shadow-none border border-white/80 dark:border-stone-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+            <div>
+              <h2 class="text-xl font-bold text-stone-900 dark:text-white">Assignments & Daily Planner</h2>
+              <p class="text-xs sm:text-sm text-stone-400 mt-0.5">Track homework, lab reports, and exam prep deadlines.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="task-filter-subject" onchange="renderTasks()" class="rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-3.5 py-2 text-xs font-semibold">
+                <option value="all">All Courses</option>
+              </select>
+              <select id="task-filter-status" onchange="renderTasks()" class="rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-3.5 py-2 text-xs font-semibold">
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Add New Task Form -->
+          <form onsubmit="addTask(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-3 bg-[#FAF6F4] dark:bg-stone-800/60 p-4 rounded-2xl mb-6">
+            <div class="sm:col-span-5">
+              <input id="task-title-input" type="text" required placeholder="Assignment or task description..." class="w-full rounded-full bg-white dark:bg-stone-900 border border-stone-200/70 dark:border-stone-700 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#E56343]" />
+            </div>
+            <div class="sm:col-span-3">
+              <select id="task-subject-input" class="w-full rounded-full bg-white dark:bg-stone-900 border border-stone-200/70 dark:border-stone-700 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#E56343]"></select>
+            </div>
+            <div class="sm:col-span-2">
+              <input id="task-date-input" type="date" class="w-full rounded-full bg-white dark:bg-stone-900 border border-stone-200/70 dark:border-stone-700 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#E56343]" />
+            </div>
+            <div class="sm:col-span-2 flex gap-2">
+              <select id="task-priority-input" class="flex-1 rounded-full bg-white dark:bg-stone-900 border border-stone-200/70 dark:border-stone-700 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#E56343]">
+                <option value="High">High</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="Low">Low</option>
+              </select>
+              <button type="submit" class="bg-[#E56343] hover:bg-[#D14F30] text-white font-semibold px-5 py-2.5 rounded-full text-sm transition-colors">
+                Add
+              </button>
+            </div>
+          </form>
+
+          <div id="tasks-list-container" class="space-y-2.5">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 4: PROGRESS ANALYTICS & SESSION LOGS ==================== -->
+      <section id="tab-analytics" class="tab-content hidden space-y-5">
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- Weekly Study Hours Bar Chart -->
+          <div class="lg:col-span-8 bg-white dark:bg-stone-900 p-6 rounded-[24px] shadow-[0_8px_28px_-12px_rgba(120,72,56,0.06)] dark:shadow-none border border-white/80 dark:border-stone-800">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+              <div>
+                <h2 class="text-lg font-bold text-stone-900 dark:text-white">Study Statistics</h2>
+                <p class="text-xs text-stone-400">Last 7 days focus distribution</p>
+              </div>
+              <div class="flex items-center gap-1 bg-[#FAF6F4] dark:bg-stone-800 p-1 rounded-full">
+                <button onclick="setChartMode('daily')" id="chart-mode-daily" class="px-3.5 py-1 rounded-full text-xs font-semibold transition-all bg-white dark:bg-stone-700 shadow-sm">By Day</button>
+                <button onclick="setChartMode('subject')" id="chart-mode-subject" class="px-3.5 py-1 rounded-full text-xs font-semibold transition-all text-stone-500 dark:text-stone-400">By Course</button>
+              </div>
+            </div>
+
+            <div id="analytics-chart-container" class="h-64 flex items-end justify-between gap-3 sm:gap-5 pt-6 pb-2 px-2 border-b border-stone-100 dark:border-stone-800">
+              <!-- Populated by JS -->
+            </div>
+            <div id="analytics-chart-labels" class="flex justify-between gap-3 sm:gap-5 pt-2.5 px-2 text-xs font-semibold text-stone-400">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Course Target vs Actual -->
+          <div class="lg:col-span-4 bg-white dark:bg-stone-900 p-6 rounded-[24px] shadow-[0_8px_28px_-12px_rgba(120,72,56,0.06)] dark:shadow-none border border-white/80 dark:border-stone-800 flex flex-col justify-between">
+            <div>
+              <h2 class="text-lg font-bold text-stone-900 dark:text-white mb-1">Course Goals</h2>
+              <p class="text-xs text-stone-400 mb-5">Weekly logged hours against targets</p>
+              <div id="analytics-subject-bars" class="space-y-4 max-h-[260px] overflow-y-auto pr-1">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+            <div class="pt-4 mt-4 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-xs">
+              <span class="text-stone-400">Total All-Time Logged:</span>
+              <span id="analytics-total-hours" class="font-bold text-sm text-[#E56343]">0.0 hrs</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Session History Log -->
+        <div class="bg-white dark:bg-stone-900 p-6 rounded-[24px] shadow-[0_8px_28px_-12px_rgba(120,72,56,0.06)] dark:shadow-none border border-white/80 dark:border-stone-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+            <div>
+              <h2 class="text-lg font-bold text-stone-900 dark:text-white">Study Session History</h2>
+              <p class="text-xs text-stone-400">Complete log of Pomodoro, Stopwatch & manual sessions</p>
+            </div>
+            <button onclick="openModal('manual-session-modal')" class="bg-[#E56343] hover:bg-[#D14F30] text-white font-semibold px-4 py-2 rounded-full text-xs sm:text-sm transition-colors flex items-center gap-2 self-start sm:self-auto">
+              <i class="fa-solid fa-plus"></i> Log Manual Session
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-stone-100 dark:border-stone-800 text-xs font-bold uppercase tracking-wider text-stone-400">
+                  <th class="py-3 px-4">Date</th>
+                  <th class="py-3 px-4">Course</th>
+                  <th class="py-3 px-4">Duration</th>
+                  <th class="py-3 px-4">Session Note</th>
+                  <th class="py-3 px-4 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="session-log-tbody" class="divide-y divide-stone-100 dark:divide-stone-800/80 text-sm">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Mobile Bottom Navigation Bar -->
+  <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border-t border-stone-200/80 dark:border-stone-800 px-2 py-1.5 flex justify-around">
+    <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-btn-mobile flex-1 py-1.5 rounded-2xl text-[11px] font-semibold flex flex-col items-center gap-1">
+      <i class="fa-solid fa-table-cells-large text-sm"></i>
+      <span>Dashboard</span>
+    </button>
+    <button onclick="switchTab('subjects')" data-tab="subjects" class="nav-btn-mobile flex-1 py-1.5 rounded-2xl text-[11px] font-semibold flex flex-col items-center gap-1">
+      <i class="fa-regular fa-folder-open text-sm"></i>
+      <span>Courses</span>
+    </button>
+    <button onclick="switchTab('tasks')" data-tab="tasks" class="nav-btn-mobile flex-1 py-1.5 rounded-2xl text-[11px] font-semibold flex flex-col items-center gap-1">
+      <i class="fa-regular fa-clipboard text-sm"></i>
+      <span>Tasks</span>
+    </button>
+    <button onclick="switchTab('analytics')" data-tab="analytics" class="nav-btn-mobile flex-1 py-1.5 rounded-2xl text-[11px] font-semibold flex flex-col items-center gap-1">
+      <i class="fa-solid fa-chart-simple text-sm"></i>
+      <span>Progress</span>
+    </button>
+  </nav>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- 1. Add / Edit Subject Modal -->
+  <div id="subject-modal" class="fixed inset-0 z-50 hidden bg-stone-950/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-stone-900 rounded-[28px] max-w-md w-full p-6 border border-stone-100 dark:border-stone-800 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="subject-modal-title" class="text-lg font-bold">Add New Course</h3>
+        <button onclick="closeModal('subject-modal')" class="w-8 h-8 rounded-full bg-[#FAF6F4] dark:bg-stone-800 text-stone-400 hover:text-stone-700 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form onsubmit="saveSubject(event)" class="space-y-4">
+        <input type="hidden" id="edit-subject-id" />
+        <div>
+          <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1.5">Course / Subject Name</label>
+          <input id="subject-name-input" type="text" required placeholder="e.g., Data Structures & Algorithms" class="w-full rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#E56343]" />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1.5">Weekly Target (Hours)</label>
+            <input id="subject-target-input" type="number" min="1" max="80" step="0.5" required value="6" class="w-full rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#E56343]" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1.5">Color Tag</label>
+            <div class="flex items-center gap-2 pt-1.5" id="color-picker-group">
+              <button type="button" onclick="selectSubjectColor('#E56343')" data-color="#E56343" class="color-swatch w-7 h-7 rounded-full bg-[#E56343] ring-2 ring-offset-2 ring-[#E56343] dark:ring-offset-stone-900"></button>
+              <button type="button" onclick="selectSubjectColor('#F3C152')" data-color="#F3C152" class="color-swatch w-7 h-7 rounded-full bg-[#F3C152]"></button>
+              <button type="button" onclick="selectSubjectColor('#10b981')" data-color="#10b981" class="color-swatch w-7 h-7 rounded-full bg-emerald-500"></button>
+              <button type="button" onclick="selectSubjectColor('#ec4899')" data-color="#ec4899" class="color-swatch w-7 h-7 rounded-full bg-pink-500"></button>
+              <button type="button" onclick="selectSubjectColor('#06b6d4')" data-color="#06b6d4" class="color-swatch w-7 h-7 rounded-full bg-cyan-500"></button>
+              <button type="button" onclick="selectSubjectColor('#8b5cf6')" data-color="#8b5cf6" class="color-swatch w-7 h-7 rounded-full bg-violet-500"></button>
+            </div>
+            <input type="hidden" id="subject-color-input" value="#E56343" />
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-3">
+          <button type="button" onclick="closeModal('subject-modal')" class="px-4 py-2 rounded-full text-sm font-medium bg-[#FAF6F4] dark:bg-stone-800 hover:bg-stone-200/70">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-full text-sm font-semibold bg-[#E56343] hover:bg-[#D14F30] text-white">Save Course</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Timer Settings Modal -->
+  <div id="timer-settings-modal" class="fixed inset-0 z-50 hidden bg-stone-950/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-stone-900 rounded-[28px] max-w-md w-full p-6 border border-stone-100 dark:border-stone-800 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">Timer Duration Settings</h3>
+        <button onclick="closeModal('timer-settings-modal')" class="w-8 h-8 rounded-full bg-[#FAF6F4] dark:bg-stone-800 text-stone-400 hover:text-stone-700 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form onsubmit="saveTimerSettings(event)" class="space-y-4">
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1.5">Focus (min)</label>
+            <input id="setting-focus-min" type="number" min="1" max="180" required class="w-full rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-3.5 py-2 text-sm text-center" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1.5">Short Break</label>
+            <input id="setting-short-min" type="number" min="1" max="60" required class="w-full rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-3.5 py-2 text-sm text-center" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1.5">Long Break</label>
+            <input id="setting-long-min" type="number" min="1" max="90" required class="w-full rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-3.5 py-2 text-sm text-center" />
+          </div>
+        </div>
+        <div class="flex items-center justify-between pt-2">
+          <span class="text-sm font-medium">Completion Sound Chime</span>
+          <input id="setting-sound-enabled" type="checkbox" class="w-4 h-4 accent-[#E56343] rounded" />
+        </div>
+        <div class="flex justify-end gap-2 pt-3">
+          <button type="button" onclick="closeModal('timer-settings-modal')" class="px-4 py-2 rounded-full text-sm font-medium bg-[#FAF6F4] dark:bg-stone-800">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-full text-sm font-semibold bg-[#E56343] hover:bg-[#D14F30] text-white">Apply Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Manual Session Log Modal -->
+  <div id="manual-session-modal" class="fixed inset-0 z-50 hidden bg-stone-950/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-stone-900 rounded-[28px] max-w-md w-full p-6 border border-stone-100 dark:border-stone-800 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">Log Past Study Session</h3>
+        <button onclick="closeModal('manual-session-modal')" class="w-8 h-8 rounded-full bg-[#FAF6F4] dark:bg-stone-800 text-stone-400 hover:text-stone-700 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form onsubmit="addManualSession(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1.5">Course</label>
+          <select id="manual-session-subject" required class="w-full rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-4 py-2.5 text-sm"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1.5">Date</label>
+            <input id="manual-session-date" type="date" required class="w-full rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-4 py-2.5 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1.5">Duration (Minutes)</label>
+            <input id="manual-session-minutes" type="number" min="1" max="600" required value="45" class="w-full rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-4 py-2.5 text-sm" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1.5">Session Note</label>
+          <input id="manual-session-note" type="text" placeholder="e.g., Reviewed lecture slides & solved past paper" class="w-full rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-4 py-2.5 text-sm" />
+        </div>
+        <div class="flex justify-end gap-2 pt-3">
+          <button type="button" onclick="closeModal('manual-session-modal')" class="px-4 py-2 rounded-full text-sm font-medium bg-[#FAF6F4] dark:bg-stone-800">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-full text-sm font-semibold bg-[#E56343] hover:bg-[#D14F30] text-white">Save Session</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. Data Management & Backup Modal -->
+  <div id="data-modal" class="fixed inset-0 z-50 hidden bg-stone-950/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-stone-900 rounded-[28px] max-w-md w-full p-6 border border-stone-100 dark:border-stone-800 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">Data Backup & Sample Dataset</h3>
+        <button onclick="closeModal('data-modal')" class="w-8 h-8 rounded-full bg-[#FAF6F4] dark:bg-stone-800 text-stone-400 hover:text-stone-700 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="space-y-4 text-sm">
+        <p class="text-stone-500 dark:text-stone-400 text-xs leading-relaxed">
+          All your study logs, courses, syllabus checklists, and assignments are automatically saved in your browser's local storage.
+        </p>
+
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="exportDataJSON()" class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-[#FFF4F0] dark:bg-[#E56343]/20 text-[#E56343] font-semibold border border-[#FFC7B5] dark:border-[#E56343]/40 hover:bg-[#FFE4DB] transition-colors">
+            <i class="fa-solid fa-download"></i> Export JSON
+          </button>
+          <label class="cursor-pointer flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-[#FAF6F4] dark:bg-stone-800 text-stone-700 dark:text-stone-200 font-semibold border border-stone-200/70 dark:border-stone-700 hover:bg-stone-200/70 transition-colors">
+            <i class="fa-solid fa-upload"></i> Import JSON
+            <input type="file" accept=".json" onchange="importDataJSON(event)" class="hidden" />
+          </label>
+        </div>
+
+        <hr class="border-stone-100 dark:border-stone-800" />
+
+        <div class="space-y-2">
+          <button onclick="loadSampleData()" class="w-full py-2.5 px-4 rounded-full bg-[#FEF3D6] dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 font-semibold border border-amber-200 dark:border-amber-800/60 hover:bg-amber-100 transition-colors flex items-center justify-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Load Realistic Sample Dataset
+          </button>
+
+          <div id="clear-data-confirm-box" class="pt-1">
+            <button id="clear-data-initial-btn" onclick="showClearConfirmation()" class="w-full py-2.5 px-4 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-semibold border border-rose-200 dark:border-rose-800/60 hover:bg-rose-100 transition-colors flex items-center justify-center gap-2">
+              <i class="fa-solid fa-trash-can"></i> Clear All Application Data
+            </button>
+            <div id="clear-data-actions" class="hidden flex items-center gap-2 mt-2">
+              <button onclick="clearAllData()" class="flex-1 py-2 px-3 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs">Yes, Erase Everything</button>
+              <button onclick="hideClearConfirmation()" class="flex-1 py-2 px-3 rounded-full bg-stone-200 dark:bg-stone-800 font-semibold text-xs">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT APPLICATION LOGIC ==================== -->
+  <script>
+    // -------------------- STATE & STORAGE --------------------
+    const STORAGE_KEY = 'focusflow_study_os_v1';
+    let isEmbeddedIframe = false;
+    let storageAvailable = true;
+    let iframeBannerDismissed = false;
+
+    function detectStorageEnvironment() {
+      try {
+        isEmbeddedIframe = window.self !== window.top;
+      } catch (e) {
+        isEmbeddedIframe = true;
+      }
+
+      try {
+        const testKey = '__focusflow_storage_test__';
+        localStorage.setItem(testKey, '1');
+        localStorage.removeItem(testKey);
+        storageAvailable = true;
+      } catch (e) {
+        storageAvailable = false;
+      }
+    }
+
+    let appState = {
+      theme: 'light',
+      activeTab: 'dashboard',
+      chartMode: 'daily', // 'daily' | 'subject'
+      isDemoData: false,
+      demoBannerDismissed: false,
+      settings: {
+        focusMinutes: 25,
+        shortBreakMinutes: 5,
+        longBreakMinutes: 15,
+        soundEnabled: true
+      },
+      subjects: [],
+      tasks: [],
+      sessions: []
+    };
+
+    // Timer Runtime Variables
+    let timerState = {
+      mode: 'focus', // 'focus' | 'shortBreak' | 'longBreak' | 'stopwatch'
+      totalSeconds: 25 * 60,
+      remainingSeconds: 25 * 60,
+      isRunning: false,
+      intervalId: null,
+      elapsedFocusSeconds: 0,
+      lastTickTimestamp: null,
+      stopwatchAccumulatedMs: 0,
+      laps: []
+    };
+
+    // -------------------- UTILITY & HELPER FUNCTIONS --------------------
+    function getLocalDateString(dateObj = new Date()) {
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function getPastDateString(daysAgo) {
+      const d = new Date();
+      d.setDate(d.getDate() - daysAgo);
+      return getLocalDateString(d);
+    }
+
+    function escapeHTML(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const styles = {
+        success: 'bg-emerald-600 text-white border-emerald-500',
+        error: 'bg-rose-600 text-white border-rose-500',
+        warning: 'bg-amber-500 text-white border-amber-400',
+        info: 'bg-stone-900 text-white border-stone-700'
+      };
+
+      const icons = {
+        success: 'fa-circle-check',
+        error: 'fa-circle-exclamation',
+        warning: 'fa-triangle-exclamation',
+        info: 'fa-circle-info'
+      };
+
+      const toast = document.createElement('div');
+      toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-full shadow-lg border text-xs sm:text-sm font-medium transition-all duration-300 transform translate-y-2 opacity-0 ${styles[type] || styles.info}`;
+      toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i><span>${escapeHTML(message)}</span>`;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+
+    function playCompletionChime() {
+      if (!appState.settings.soundEnabled) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const now = ctx.currentTime;
+        const notes = [523.25, 659.25, 783.99];
+
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.14);
+          gain.gain.setValueAtTime(0.001, now + idx * 0.14);
+          gain.gain.exponentialRampToValueAtTime(0.18, now + idx * 0.14 + 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.14 + 0.45);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + idx * 0.14);
+          osc.stop(now + idx * 0.14 + 0.5);
+        });
+      } catch (err) {
+        // Ignore audio context autoplay restrictions
+      }
+    }
+
+    // -------------------- STARTER DATASET & PERSISTENCE --------------------
+    function getEmptyDataset() {
+      return {
+        theme: 'light',
+        activeTab: 'dashboard',
+        chartMode: 'daily',
+        isDemoData: false,
+        demoBannerDismissed: true,
+        settings: {
+          focusMinutes: 25,
+          shortBreakMinutes: 5,
+          longBreakMinutes: 15,
+          soundEnabled: true
+        },
+        subjects: [],
+        tasks: [],
+        sessions: []
+      };
+    }
+
+    function getStarterDataset() {
+      return {
+        theme: 'light',
+        activeTab: 'dashboard',
+        chartMode: 'daily',
+        isDemoData: true,
+        demoBannerDismissed: false,
+        settings: {
+          focusMinutes: 25,
+          shortBreakMinutes: 5,
+          longBreakMinutes: 15,
+          soundEnabled: true
+        },
+        subjects: [
+          {
+            id: 'sub-1',
+            name: 'Data Structures & Algorithms',
+            color: '#E56343',
+            weeklyTargetHours: 8,
+            topics: [
+              { id: 'top-1', title: 'Asymptotic Complexity & Recursion', completed: true },
+              { id: 'top-2', title: 'Binary Search Trees & AVL Rotations', completed: true },
+              { id: 'top-3', title: 'Graph Traversals (BFS / DFS / Dijkstra)', completed: false },
+              { id: 'top-4', title: 'Dynamic Programming Memoization', completed: false }
+            ]
+          },
+          {
+            id: 'sub-2',
+            name: 'Linear Algebra & Calculus',
+            color: '#F3C152',
+            weeklyTargetHours: 6,
+            topics: [
+              { id: 'top-5', title: 'Eigenvalues & Eigenvectors', completed: true },
+              { id: 'top-6', title: 'Orthogonal Projections & Least Squares', completed: false },
+              { id: 'top-7', title: 'Multivariable Gradient Descent', completed: false }
+            ]
+          },
+          {
+            id: 'sub-3',
+            name: 'Operating Systems',
+            color: '#F17A5C',
+            weeklyTargetHours: 5,
+            topics: [
+              { id: 'top-8', title: 'Process Scheduling & Threads', completed: true },
+              { id: 'top-9', title: 'Deadlocks & Semaphores', completed: true },
+              { id: 'top-10', title: 'Virtual Memory & Page Replacement', completed: false }
+            ]
+          }
+        ],
+        tasks: [
+          {
+            id: 'tsk-1',
+            title: 'Implement Dijkstra shortest path lab in C++',
+            subjectId: 'sub-1',
+            dueDate: getLocalDateString(),
+            priority: 'High',
+            completed: false
+          },
+          {
+            id: 'tsk-2',
+            title: 'Complete Eigenvalues Problem Set #4',
+            subjectId: 'sub-2',
+            dueDate: getPastDateString(-1),
+            priority: 'Medium',
+            completed: false
+          },
+          {
+            id: 'tsk-3',
+            title: 'Summarize Virtual Memory lecture notes',
+            subjectId: 'sub-3',
+            dueDate: getPastDateString(-2),
+            priority: 'Low',
+            completed: false
+          },
+          {
+            id: 'tsk-4',
+            title: 'Review AVL Tree balancing proofs',
+            subjectId: 'sub-1',
+            dueDate: getPastDateString(1),
+            priority: 'Medium',
+            completed: true
+          }
+        ],
+        sessions: [
+          { id: 'ses-1', subjectId: 'sub-1', date: getLocalDateString(), durationMinutes: 95, note: 'Graph BFS/DFS practice problems' },
+          { id: 'ses-2', subjectId: 'sub-2', date: getLocalDateString(), durationMinutes: 45, note: 'Matrix diagonalization drills' },
+          { id: 'ses-3', subjectId: 'sub-3', date: getPastDateString(1), durationMinutes: 75, note: 'Mutex & semaphore concurrency lab' },
+          { id: 'ses-4', subjectId: 'sub-1', date: getPastDateString(2), durationMinutes: 110, note: 'Binary heap implementation' },
+          { id: 'ses-5', subjectId: 'sub-2', date: getPastDateString(3), durationMinutes: 50, note: 'Orthogonal bases review' },
+          { id: 'ses-6', subjectId: 'sub-3', date: getPastDateString(4), durationMinutes: 80, note: 'CPU scheduling algorithms' },
+          { id: 'ses-7', subjectId: 'sub-1', date: getPastDateString(5), durationMinutes: 65, note: 'Recursion tree analysis' }
+        ]
+      };
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (err) {
+        console.warn('Unable to persist state:', err);
+      }
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          appState = {
+            ...appState,
+            ...parsed,
+            settings: { ...appState.settings, ...(parsed.settings || {}) }
+          };
+        } else {
+          appState = getStarterDataset();
+          saveState();
+        }
+      } catch (err) {
+        appState = getStarterDataset();
+      }
+    }
+
+    // -------------------- THEME & TAB NAVIGATION --------------------
+    function applyTheme() {
+      const htmlEl = document.documentElement;
+      const mobileIcon = document.getElementById('theme-icon-mobile');
+      const lightPill = document.getElementById('mode-pill-light');
+      const darkPill = document.getElementById('mode-pill-dark');
+
+      if (appState.theme === 'dark') {
+        htmlEl.classList.add('dark');
+        htmlEl.classList.remove('light');
+        if (mobileIcon) mobileIcon.className = 'fa-solid fa-sun text-xs text-amber-400';
+        if (lightPill && darkPill) {
+          lightPill.className = 'flex-1 py-2 px-3 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all text-stone-400 hover:text-stone-200';
+          darkPill.className = 'flex-1 py-2 px-3 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all bg-stone-950 text-white shadow-sm';
+        }
+      } else {
+        htmlEl.classList.remove('dark');
+        htmlEl.classList.add('light');
+        if (mobileIcon) mobileIcon.className = 'fa-solid fa-moon text-xs';
+        if (lightPill && darkPill) {
+          lightPill.className = 'flex-1 py-2 px-3 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all bg-stone-900 text-white shadow-sm';
+          darkPill.className = 'flex-1 py-2 px-3 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all text-stone-500 hover:text-stone-800';
+        }
+      }
+    }
+
+    function setThemeMode(mode) {
+      appState.theme = mode;
+      applyTheme();
+      saveState();
+    }
+
+    function toggleTheme() {
+      setThemeMode(appState.theme === 'dark' ? 'light' : 'dark');
+    }
+
+    function switchTab(tabName) {
+      appState.activeTab = tabName;
+      saveState();
+
+      document.querySelectorAll('.tab-content').forEach(section => {
+        section.classList.add('hidden');
+      });
+      const activeSection = document.getElementById(`tab-${tabName}`);
+      if (activeSection) {
+        activeSection.classList.remove('hidden');
+      }
+
+      // Desktop Floating Sidebar Active Pill (Warm Coral #E56343 matching Eduhive active tab)
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        if (btn.dataset.tab === tabName) {
+          btn.className = 'nav-btn w-full px-4 py-3 rounded-2xl text-sm font-semibold transition-all flex items-center gap-3 bg-[#E56343] text-white shadow-md shadow-[#E56343]/25';
+        } else {
+          btn.className = 'nav-btn w-full px-4 py-3 rounded-2xl text-sm font-medium transition-all flex items-center gap-3 text-stone-500 dark:text-stone-400 hover:bg-[#FAF6F4] dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-100';
+        }
+      });
+
+      // Mobile Bottom Bar Active Pill
+      document.querySelectorAll('.nav-btn-mobile').forEach(btn => {
+        if (btn.dataset.tab === tabName) {
+          btn.className = 'nav-btn-mobile flex-1 py-1.5 rounded-2xl text-[11px] font-bold flex flex-col items-center gap-1 bg-[#FFF4F0] dark:bg-[#E56343]/20 text-[#E56343]';
+        } else {
+          btn.className = 'nav-btn-mobile flex-1 py-1.5 rounded-2xl text-[11px] font-medium flex flex-col items-center gap-1 text-stone-400';
+        }
+      });
+
+      renderAll();
+    }
+
+    // -------------------- POMODORO & STOPWATCH TIMER --------------------
+    function formatDurationClock(totalSec) {
+      const hrs = Math.floor(totalSec / 3600);
+      const mins = Math.floor((totalSec % 3600) / 60);
+      const secs = totalSec % 60;
+      if (hrs > 0) {
+        return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      }
+      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function setTimerMode(mode) {
+      if (timerState.isRunning) {
+        pauseTimer();
+      }
+      timerState.mode = mode;
+      timerState.elapsedFocusSeconds = 0;
+      timerState.stopwatchAccumulatedMs = 0;
+      timerState.lastTickTimestamp = null;
+      timerState.laps = [];
+
+      if (mode === 'stopwatch') {
+        timerState.totalSeconds = 60;
+        timerState.remainingSeconds = 0;
+      } else {
+        let mins = appState.settings.focusMinutes;
+        if (mode === 'shortBreak') mins = appState.settings.shortBreakMinutes;
+        if (mode === 'longBreak') mins = appState.settings.longBreakMinutes;
+
+        timerState.totalSeconds = mins * 60;
+        timerState.remainingSeconds = mins * 60;
+      }
+
+      renderStopwatchLaps();
+      updateTimerUI();
+    }
+
+    function getStopwatchElapsedMs() {
+      if (!timerState.isRunning || !timerState.lastTickTimestamp) {
+        return timerState.stopwatchAccumulatedMs;
+      }
+      return timerState.stopwatchAccumulatedMs + (Date.now() - timerState.lastTickTimestamp);
+    }
+
+    function updateTimerUI() {
+      const isStopwatch = timerState.mode === 'stopwatch';
+      let displaySec = timerState.remainingSeconds;
+
+      if (isStopwatch) {
+        displaySec = Math.floor(getStopwatchElapsedMs() / 1000);
+      }
+
+      const formatted = formatDurationClock(displaySec);
+      const displayEl = document.getElementById('timer-display');
+      displayEl.textContent = formatted;
+      if (displaySec >= 3600) {
+        displayEl.classList.remove('text-3xl', 'sm:text-4xl');
+        displayEl.classList.add('text-2xl', 'sm:text-3xl');
+      } else {
+        displayEl.classList.remove('text-2xl', 'sm:text-3xl');
+        displayEl.classList.add('text-3xl', 'sm:text-4xl');
+      }
+
+      document.title = timerState.isRunning ? `(${formatted}) FocusFlow` : 'FocusFlow — Student Dashboard';
+
+      // Progress ring (circumference = 2 * PI * 96 ≈ 603.18)
+      const circumference = 603.18;
+      const ring = document.getElementById('timer-progress-ring');
+
+      if (isStopwatch) {
+        const secProgress = (getStopwatchElapsedMs() % 60000) / 60000;
+        ring.style.strokeDashoffset = circumference * (1 - secProgress);
+      } else {
+        const ratio = timerState.totalSeconds > 0 ? timerState.remainingSeconds / timerState.totalSeconds : 1;
+        ring.style.strokeDashoffset = circumference * (1 - ratio);
+      }
+
+      // Mode pills styling
+      ['focus', 'shortBreak', 'longBreak', 'stopwatch'].forEach(m => {
+        const btn = document.getElementById(`mode-${m}`);
+        if (!btn) return;
+        if (m === timerState.mode) {
+          btn.className = 'timer-mode-btn flex-1 py-1.5 px-2.5 rounded-full text-[11px] font-bold transition-all bg-[#E56343] text-white shadow-sm flex items-center justify-center gap-1';
+        } else {
+          btn.className = 'timer-mode-btn flex-1 py-1.5 px-2.5 rounded-full text-[11px] font-semibold transition-all text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 flex items-center justify-center gap-1';
+        }
+      });
+
+      const badge = document.getElementById('timer-status-badge');
+      const lapBtn = document.getElementById('stopwatch-lap-btn');
+      const finishBtn = document.getElementById('timer-finish-btn');
+
+      if (isStopwatch) {
+        ring.classList.remove('text-[#E56343]', 'text-emerald-500');
+        ring.classList.add('text-[#F3C152]');
+        badge.className = 'text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#FEF3D6] text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 mb-1';
+        badge.textContent = timerState.isRunning ? 'Stopwatch' : 'Open Timer';
+        lapBtn.classList.remove('hidden');
+        finishBtn.classList.remove('hidden');
+      } else if (timerState.mode === 'focus') {
+        ring.classList.remove('text-emerald-500', 'text-[#F3C152]');
+        ring.classList.add('text-[#E56343]');
+        badge.className = 'text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#FFF4F0] text-[#E56343] dark:bg-[#E56343]/20 mb-1';
+        badge.textContent = timerState.isRunning ? 'Focusing' : 'Focus Session';
+        lapBtn.classList.add('hidden');
+        finishBtn.classList.remove('hidden');
+      } else {
+        ring.classList.remove('text-[#E56343]', 'text-[#F3C152]');
+        ring.classList.add('text-emerald-500');
+        badge.className = 'text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 mb-1';
+        badge.textContent = timerState.mode === 'shortBreak' ? 'Short Break' : 'Long Break';
+        lapBtn.classList.add('hidden');
+        finishBtn.classList.add('hidden');
+      }
+
+      const startBtn = document.getElementById('timer-start-btn');
+      if (timerState.isRunning) {
+        startBtn.innerHTML = `<i class="fa-solid fa-pause"></i> <span>Pause</span>`;
+        startBtn.classList.remove('bg-[#E56343]', 'hover:bg-[#D14F30]');
+        startBtn.classList.add('bg-[#F3C152]', 'hover:bg-[#E8B038]', 'text-stone-900');
+      } else {
+        const hasProgress = isStopwatch
+          ? getStopwatchElapsedMs() > 0
+          : timerState.remainingSeconds < timerState.totalSeconds;
+        const startLabel = hasProgress ? 'Resume' : (isStopwatch ? 'Start Watch' : 'Start Focus');
+        startBtn.innerHTML = `<i class="fa-solid fa-play"></i> <span>${startLabel}</span>`;
+        startBtn.classList.remove('bg-[#F3C152]', 'hover:bg-[#E8B038]', 'text-stone-900');
+        startBtn.classList.add('bg-[#E56343]', 'hover:bg-[#D14F30]', 'text-white');
+      }
+
+      updateActiveSubjectLabel();
+    }
+
+    function updateActiveSubjectLabel() {
+      const sel = document.getElementById('timer-subject-select');
+      const label = document.getElementById('timer-active-subject-label');
+      if (!sel || !label) return;
+      const sub = appState.subjects.find(s => s.id === sel.value);
+      label.textContent = sub ? sub.name : 'General Study';
+    }
+
+    function toggleTimer() {
+      if (timerState.isRunning) {
+        pauseTimer();
+      } else {
+        startTimer();
+      }
+    }
+
+    function startTimer() {
+      if (timerState.isRunning) return;
+      timerState.isRunning = true;
+      timerState.lastTickTimestamp = Date.now();
+      updateTimerUI();
+
+      const tickInterval = timerState.mode === 'stopwatch' ? 250 : 1000;
+      timerState.intervalId = setInterval(() => {
+        if (timerState.mode === 'stopwatch') {
+          updateTimerUI();
+          return;
+        }
+
+        const now = Date.now();
+        const deltaSec = Math.max(1, Math.floor((now - timerState.lastTickTimestamp) / 1000));
+        timerState.lastTickTimestamp = now;
+
+        if (timerState.remainingSeconds > 0) {
+          const step = Math.min(timerState.remainingSeconds, deltaSec);
+          timerState.remainingSeconds -= step;
+          if (timerState.mode === 'focus') {
+            timerState.elapsedFocusSeconds += step;
+          }
+          updateTimerUI();
+        } else {
+          handleTimerComplete();
+        }
+      }, tickInterval);
+    }
+
+    function pauseTimer() {
+      if (timerState.isRunning && timerState.mode === 'stopwatch' && timerState.lastTickTimestamp) {
+        timerState.stopwatchAccumulatedMs += Date.now() - timerState.lastTickTimestamp;
+      }
+      timerState.isRunning = false;
+      timerState.lastTickTimestamp = null;
+      clearInterval(timerState.intervalId);
+      timerState.intervalId = null;
+      updateTimerUI();
+    }
+
+    function resetTimer() {
+      pauseTimer();
+      timerState.elapsedFocusSeconds = 0;
+      timerState.stopwatchAccumulatedMs = 0;
+      timerState.laps = [];
+      renderStopwatchLaps();
+      setTimerMode(timerState.mode);
+    }
+
+    function recordStopwatchLap() {
+      if (timerState.mode !== 'stopwatch') return;
+      const totalMs = getStopwatchElapsedMs();
+      if (totalMs <= 0) {
+        showToast('Start the stopwatch first to record a lap.', 'warning');
+        return;
+      }
+      const prevTotalMs = timerState.laps.length > 0 ? timerState.laps[0].totalMs : 0;
+      const splitMs = totalMs - prevTotalMs;
+
+      timerState.laps.unshift({
+        lapNumber: timerState.laps.length + 1,
+        splitMs,
+        totalMs
+      });
+
+      renderStopwatchLaps();
+    }
+
+    function renderStopwatchLaps() {
+      const container = document.getElementById('stopwatch-laps-container');
+      const list = document.getElementById('stopwatch-laps-list');
+      if (!container || !list) return;
+
+      if (timerState.mode !== 'stopwatch' || timerState.laps.length === 0) {
+        container.classList.add('hidden');
+        list.innerHTML = '';
+        return;
+      }
+
+      container.classList.remove('hidden');
+      list.innerHTML = timerState.laps.map(lap => {
+        const splitFmt = formatDurationClock(Math.floor(lap.splitMs / 1000));
+        const totalFmt = formatDurationClock(Math.floor(lap.totalMs / 1000));
+        return `
+          <div class="flex items-center justify-between py-1 px-2 rounded-xl bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300">
+            <span class="font-bold text-[#E56343]">#${String(lap.lapNumber).padStart(2, '0')}</span>
+            <span>+${splitFmt}</span>
+            <span class="font-semibold">${totalFmt}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleTimerComplete() {
+      pauseTimer();
+      playCompletionChime();
+
+      if (timerState.mode === 'focus') {
+        const loggedMins = Math.max(1, Math.round(timerState.totalSeconds / 60));
+        logFocusSession(loggedMins, 'Pomodoro focus session');
+        showToast(`Focus session complete! Logged ${loggedMins} mins.`, 'success');
+        setTimerMode('shortBreak');
+      } else {
+        showToast('Break finished! Ready for your next focus session.', 'info');
+        setTimerMode('focus');
+      }
+    }
+
+    function completeSessionEarly() {
+      if (timerState.mode === 'stopwatch') {
+        const elapsedMs = getStopwatchElapsedMs();
+        const elapsedMins = Math.round(elapsedMs / 60000);
+        if (elapsedMs < 30000) {
+          showToast('Track at least 30 seconds on the stopwatch before logging.', 'warning');
+          return;
+        }
+        const finalMins = Math.max(1, elapsedMins);
+        pauseTimer();
+        logFocusSession(finalMins, 'Stopwatch study session');
+        playCompletionChime();
+        showToast(`Stopwatch session logged (${finalMins} min${finalMins === 1 ? '' : 's'})!`, 'success');
+        resetTimer();
+        return;
+      }
+
+      if (timerState.mode !== 'focus') {
+        resetTimer();
+        return;
+      }
+      const elapsedMins = Math.round(timerState.elapsedFocusSeconds / 60);
+      if (elapsedMins < 1) {
+        showToast('Focus for at least 1 minute before logging.', 'warning');
+        return;
+      }
+      pauseTimer();
+      logFocusSession(elapsedMins, 'Pomodoro focus session');
+      playCompletionChime();
+      showToast(`Logged ${elapsedMins} minutes of focus time!`, 'success');
+      resetTimer();
+    }
+
+    function logFocusSession(durationMinutes, defaultNote = 'Pomodoro focus session') {
+      const subjectId = document.getElementById('timer-subject-select').value || (appState.subjects[0]?.id || 'general');
+      const noteInput = document.getElementById('timer-session-note');
+      const note = noteInput.value.trim() || defaultNote;
+
+      appState.sessions.unshift({
+        id: 'ses-' + Date.now(),
+        subjectId,
+        date: getLocalDateString(),
+        durationMinutes,
+        note
+      });
+
+      noteInput.value = '';
+      timerState.elapsedFocusSeconds = 0;
+      saveState();
+      renderAll();
+    }
+
+    function saveTimerSettings(e) {
+      e.preventDefault();
+      appState.settings.focusMinutes = parseInt(document.getElementById('setting-focus-min').value, 10) || 25;
+      appState.settings.shortBreakMinutes = parseInt(document.getElementById('setting-short-min').value, 10) || 5;
+      appState.settings.longBreakMinutes = parseInt(document.getElementById('setting-long-min').value, 10) || 15;
+      appState.settings.soundEnabled = document.getElementById('setting-sound-enabled').checked;
+
+      saveState();
+      setTimerMode(timerState.mode);
+      closeModal('timer-settings-modal');
+      showToast('Timer settings updated.', 'success');
+    }
+
+    // -------------------- SUBJECTS & SYLLABUS MANAGER --------------------
+    function openSubjectModal(subjectId = null) {
+      const titleEl = document.getElementById('subject-modal-title');
+      const idInput = document.getElementById('edit-subject-id');
+      const nameInput = document.getElementById('subject-name-input');
+      const targetInput = document.getElementById('subject-target-input');
+
+      if (subjectId) {
+        const sub = appState.subjects.find(s => s.id === subjectId);
+        if (!sub) return;
+        titleEl.textContent = 'Edit Course';
+        idInput.value = sub.id;
+        nameInput.value = sub.name;
+        targetInput.value = sub.weeklyTargetHours;
+        selectSubjectColor(sub.color);
+      } else {
+        titleEl.textContent = 'Add New Course';
+        idInput.value = '';
+        nameInput.value = '';
+        targetInput.value = 6;
+        selectSubjectColor('#E56343');
+      }
+      openModal('subject-modal');
+    }
+
+    function selectSubjectColor(hex) {
+      document.getElementById('subject-color-input').value = hex;
+      document.querySelectorAll('.color-swatch').forEach(btn => {
+        if (btn.dataset.color === hex) {
+          btn.classList.add('ring-2', 'ring-offset-2', 'ring-[#E56343]', 'dark:ring-offset-stone-900');
+        } else {
+          btn.classList.remove('ring-2', 'ring-offset-2', 'ring-[#E56343]', 'dark:ring-offset-stone-900');
+        }
+      });
+    }
+
+    function saveSubject(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-subject-id').value;
+      const name = document.getElementById('subject-name-input').value.trim();
+      const weeklyTargetHours = parseFloat(document.getElementById('subject-target-input').value) || 5;
+      const color = document.getElementById('subject-color-input').value || '#E56343';
+
+      if (!name) return;
+
+      if (id) {
+        const idx = appState.subjects.findIndex(s => s.id === id);
+        if (idx !== -1) {
+          appState.subjects[idx] = { ...appState.subjects[idx], name, weeklyTargetHours, color };
+          showToast('Course updated.', 'success');
+        }
+      } else {
+        appState.subjects.push({
+          id: 'sub-' + Date.now(),
+          name,
+          color,
+          weeklyTargetHours,
+          topics: []
+        });
+        showToast('New course added!', 'success');
+      }
+
+      saveState();
+      closeModal('subject-modal');
+      renderAll();
+    }
+
+    function deleteSubject(subjectId) {
+      appState.subjects = appState.subjects.filter(s => s.id !== subjectId);
+      saveState();
+      renderAll();
+      showToast('Course removed.', 'info');
+    }
+
+    function addTopicToSubject(e, subjectId) {
+      e.preventDefault();
+      const input = document.getElementById(`topic-input-${subjectId}`);
+      const title = input.value.trim();
+      if (!title) return;
+
+      const sub = appState.subjects.find(s => s.id === subjectId);
+      if (sub) {
+        sub.topics.push({
+          id: 'top-' + Date.now(),
+          title,
+          completed: false
+        });
+        input.value = '';
+        saveState();
+        renderAll();
+      }
+    }
+
+    function toggleTopic(subjectId, topicId) {
+      const sub = appState.subjects.find(s => s.id === subjectId);
+      if (!sub) return;
+      const topic = sub.topics.find(t => t.id === topicId);
+      if (topic) {
+        topic.completed = !topic.completed;
+        saveState();
+        renderAll();
+      }
+    }
+
+    function deleteTopic(subjectId, topicId) {
+      const sub = appState.subjects.find(s => s.id === subjectId);
+      if (!sub) return;
+      sub.topics = sub.topics.filter(t => t.id !== topicId);
+      saveState();
+      renderAll();
+    }
+
+    // -------------------- TASKS PLANNER --------------------
+    function quickAddTaskDashboard(e) {
+      e.preventDefault();
+      const input = document.getElementById('dash-quick-task');
+      const title = input.value.trim();
+      if (!title) return;
+
+      const defaultSub = appState.subjects[0]?.id || 'general';
+      appState.tasks.unshift({
+        id: 'tsk-' + Date.now(),
+        title,
+        subjectId: defaultSub,
+        dueDate: getLocalDateString(),
+        priority: 'Medium',
+        completed: false
+      });
+
+      input.value = '';
+      saveState();
+      renderAll();
+      showToast('Assignment added!', 'success');
+    }
+
+    function addTask(e) {
+      e.preventDefault();
+      const title = document.getElementById('task-title-input').value.trim();
+      const subjectId = document.getElementById('task-subject-input').value;
+      const dueDate = document.getElementById('task-date-input').value || getLocalDateString();
+      const priority = document.getElementById('task-priority-input').value;
+
+      if (!title) return;
+
+      appState.tasks.unshift({
+        id: 'tsk-' + Date.now(),
+        title,
+        subjectId,
+        dueDate,
+        priority,
+        completed: false
+      });
+
+      document.getElementById('task-title-input').value = '';
+      saveState();
+      renderAll();
+      showToast('Assignment added to planner.', 'success');
+    }
+
+    function toggleTask(taskId) {
+      const task = appState.tasks.find(t => t.id === taskId);
+      if (task) {
+        task.completed = !task.completed;
+        saveState();
+        renderAll();
+      }
+    }
+
+    function deleteTask(taskId) {
+      appState.tasks = appState.tasks.filter(t => t.id !== taskId);
+      saveState();
+      renderAll();
+      showToast('Assignment deleted.', 'info');
+    }
+
+    // -------------------- MANUAL SESSION LOGS --------------------
+    function addManualSession(e) {
+      e.preventDefault();
+      const subjectId = document.getElementById('manual-session-subject').value;
+      const date = document.getElementById('manual-session-date').value || getLocalDateString();
+      const durationMinutes = parseInt(document.getElementById('manual-session-minutes').value, 10) || 30;
+      const note = document.getElementById('manual-session-note').value.trim() || 'Manual study log';
+
+      appState.sessions.unshift({
+        id: 'ses-' + Date.now(),
+        subjectId,
+        date,
+        durationMinutes,
+        note
+      });
+
+      document.getElementById('manual-session-note').value = '';
+      saveState();
+      closeModal('manual-session-modal');
+      renderAll();
+      showToast(`Logged ${durationMinutes} mins session.`, 'success');
+    }
+
+    function deleteSession(sessionId) {
+      appState.sessions = appState.sessions.filter(s => s.id !== sessionId);
+      saveState();
+      renderAll();
+      showToast('Session log removed.', 'info');
+    }
+
+    // -------------------- ANALYTICS & CHART HELPERS --------------------
+    function getSubjectById(id) {
+      return appState.subjects.find(s => s.id === id) || { name: 'General Study', color: '#E56343', weeklyTargetHours: 5 };
+    }
+
+    function getLast7DaysDates() {
+      const dates = [];
+      for (let i = 6; i >= 0; i--) {
+        dates.push(getPastDateString(i));
+      }
+      return dates;
+    }
+
+    function calculateStudyStreak() {
+      const sessionDates = new Set(appState.sessions.map(s => s.date));
+      if (sessionDates.size === 0) return 0;
+
+      let streak = 0;
+      let checkDate = new Date();
+      if (!sessionDates.has(getLocalDateString(checkDate))) {
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+
+      while (sessionDates.has(getLocalDateString(checkDate))) {
+        streak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+      return streak;
+    }
+
+    // -------------------- RENDERING FUNCTIONS --------------------
+    function populateSubjectDropdowns() {
+      const selectors = [
+        document.getElementById('timer-subject-select'),
+        document.getElementById('task-subject-input'),
+        document.getElementById('manual-session-subject')
+      ];
+
+      const optionsHTML = appState.subjects.length > 0
+        ? appState.subjects.map(s => `<option value="${s.id}">${escapeHTML(s.name)}</option>`).join('')
+        : `<option value="general">General Study</option>`;
+
+      selectors.forEach(sel => {
+        if (!sel) return;
+        const prev = sel.value;
+        sel.innerHTML = optionsHTML;
+        if (prev && Array.from(sel.options).some(o => o.value === prev)) {
+          sel.value = prev;
+        }
+      });
+
+      const filterSel = document.getElementById('task-filter-subject');
+      if (filterSel) {
+        const prevFilter = filterSel.value;
+        filterSel.innerHTML = `<option value="all">All Courses</option>` + optionsHTML;
+        if (prevFilter && Array.from(filterSel.options).some(o => o.value === prevFilter)) {
+          filterSel.value = prevFilter;
+        }
+      }
+    }
+
+    function renderDashboardKPIs() {
+      const today = getLocalDateString();
+      const todaySessions = appState.sessions.filter(s => s.date === today);
+      const todayMins = todaySessions.reduce((acc, s) => acc + s.durationMinutes, 0);
+
+      document.getElementById('kpi-today-hours').textContent = `${(todayMins / 60).toFixed(1)} hours`;
+      document.getElementById('kpi-today-sessions').textContent = `${todaySessions.length} session${todaySessions.length === 1 ? '' : 's'} completed`;
+
+      const streak = calculateStudyStreak();
+      document.getElementById('kpi-streak').textContent = streak;
+
+      const allTimeMins = appState.sessions.reduce((acc, s) => acc + s.durationMinutes, 0);
+      const allHrs = Math.floor(allTimeMins / 60);
+      const remMins = allTimeMins % 60;
+      document.getElementById('kpi-total-time-subtitle').textContent = `${allHrs} hours ${remMins} minutes total logged`;
+
+      const completedTasks = appState.tasks.filter(t => t.completed).length;
+      const totalTasks = appState.tasks.length;
+      document.getElementById('kpi-tasks-done').textContent = `${completedTasks} / ${totalTasks} tasks`;
+      document.getElementById('kpi-tasks-pending').textContent = `${totalTasks - completedTasks} pending items`;
+
+      document.getElementById('kpi-courses-count').textContent = `${appState.subjects.length} Course${appState.subjects.length === 1 ? '' : 's'}`;
+
+      // Weekly target progress
+      const last7 = new Set(getLast7DaysDates());
+      const weekMins = appState.sessions.filter(s => last7.has(s.date)).reduce((acc, s) => acc + s.durationMinutes, 0);
+      const weekHours = weekMins / 60;
+      const totalTargetHours = appState.subjects.reduce((acc, s) => acc + (Number(s.weeklyTargetHours) || 0), 0);
+      const hoursPct = totalTargetHours > 0 ? Math.min(100, Math.round((weekHours / totalTargetHours) * 100)) : 0;
+
+      document.getElementById('kpi-weekly-progress').textContent = `${hoursPct}%`;
+      document.getElementById('kpi-weekly-hours').textContent = `${weekHours.toFixed(1)} / ${totalTargetHours.toFixed(1)} hrs target`;
+
+      // Syllabus & Task Percentages for Concentric Learn Tracking Rings
+      let totalTopics = 0;
+      let doneTopics = 0;
+      appState.subjects.forEach(s => {
+        totalTopics += s.topics.length;
+        doneTopics += s.topics.filter(t => t.completed).length;
+      });
+      const syllabusPct = totalTopics > 0 ? Math.round((doneTopics / totalTopics) * 100) : 0;
+      const tasksPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+      const hoursRing = document.getElementById('learn-ring-hours');
+      const syllabusRing = document.getElementById('learn-ring-syllabus');
+      const tasksRing = document.getElementById('learn-ring-tasks');
+
+      if (hoursRing) hoursRing.style.strokeDashoffset = 464.95 * (1 - hoursPct / 100);
+      if (syllabusRing) syllabusRing.style.strokeDashoffset = 351.85 * (1 - syllabusPct / 100);
+      if (tasksRing) tasksRing.style.strokeDashoffset = 238.76 * (1 - tasksPct / 100);
+
+      document.getElementById('ring-label-hours').textContent = `${hoursPct}%`;
+      document.getElementById('ring-label-syllabus').textContent = `${syllabusPct}%`;
+      document.getElementById('ring-label-tasks').textContent = `${tasksPct}%`;
+
+      // 28-Day Activity Dot Matrix
+      const dotMatrixEl = document.getElementById('activity-dot-matrix');
+      if (dotMatrixEl) {
+        const activeDates = new Set(appState.sessions.map(s => s.date));
+        const dots = [];
+        for (let i = 27; i >= 0; i--) {
+          const dStr = getPastDateString(i);
+          const isActive = activeDates.has(dStr);
+          const dotClass = isActive
+            ? 'bg-[#F3C152] ring-2 ring-[#FEF3D6] dark:ring-amber-900/40'
+            : 'bg-stone-200/80 dark:bg-stone-800';
+          dots.push(`<span title="${dStr}${isActive ? ' • Studied' : ''}" class="w-3 h-3 rounded-full transition-transform hover:scale-125 ${dotClass}"></span>`);
+        }
+        dotMatrixEl.innerHTML = dots.join('');
+      }
+    }
+
+    function renderStripedBarChart(chartEl, labelsEl) {
+      if (!chartEl || !labelsEl) return;
+      const last7Dates = getLast7DaysDates();
+
+      if (appState.chartMode === 'daily') {
+        const dailyData = last7Dates.map(dateStr => {
+          const mins = appState.sessions
+            .filter(s => s.date === dateStr)
+            .reduce((acc, s) => acc + s.durationMinutes, 0);
+          const d = new Date(dateStr + 'T00:00:00');
+          const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short' });
+          return { dateStr, dayLabel, hours: +(mins / 60).toFixed(1) };
+        });
+
+        const maxHours = Math.max(2, ...dailyData.map(d => d.hours));
+
+        chartEl.innerHTML = dailyData.map(item => {
+          const heightPct = Math.round((item.hours / maxHours) * 100);
+          const barClass = item.hours >= 1 ? 'bar-stripe-coral' : 'bar-stripe-amber';
+          return `
+            <div class="flex-1 flex flex-col items-center justify-end h-full group relative">
+              <span class="text-[11px] font-mono font-bold text-stone-700 dark:text-stone-200 mb-1.5 opacity-80 group-hover:opacity-100">${item.hours}h</span>
+              <div class="w-full max-w-[34px] h-[82%] bg-[#FAF6F4] dark:bg-stone-800/70 rounded-full flex items-end overflow-hidden p-0.5">
+                <div class="w-full rounded-full transition-all duration-500 ${barClass}" style="height: ${item.hours > 0 ? Math.max(12, heightPct) : 4}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        labelsEl.innerHTML = dailyData.map(item => `
+          <div class="flex-1 text-center truncate">${item.dayLabel}</div>
+        `).join('');
+
+      } else {
+        const last7Set = new Set(last7Dates);
+        const subData = appState.subjects.map((sub, i) => {
+          const mins = appState.sessions
+            .filter(s => s.subjectId === sub.id && last7Set.has(s.date))
+            .reduce((acc, s) => acc + s.durationMinutes, 0);
+          return { name: sub.name, isEven: i % 2 === 0, hours: +(mins / 60).toFixed(1) };
+        });
+
+        const maxHours = Math.max(2, ...subData.map(d => d.hours));
+
+        if (subData.length === 0) {
+          chartEl.innerHTML = `<div class="w-full text-center text-xs text-stone-400 my-auto">No courses configured.</div>`;
+          labelsEl.innerHTML = '';
+        } else {
+          chartEl.innerHTML = subData.map(item => {
+            const heightPct = Math.round((item.hours / maxHours) * 100);
+            const barClass = item.isEven ? 'bar-stripe-coral' : 'bar-stripe-amber';
+            return `
+              <div class="flex-1 flex flex-col items-center justify-end h-full group">
+                <span class="text-[11px] font-mono font-bold text-stone-700 dark:text-stone-200 mb-1.5">${item.hours}h</span>
+                <div class="w-full max-w-[38px] h-[82%] bg-[#FAF6F4] dark:bg-stone-800/70 rounded-full flex items-end overflow-hidden p-0.5">
+                  <div class="w-full rounded-full transition-all duration-500 ${barClass}" style="height: ${item.hours > 0 ? Math.max(12, heightPct) : 4}%"></div>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          labelsEl.innerHTML = subData.map(item => `
+            <div class="flex-1 text-center truncate px-1" title="${escapeHTML(item.name)}">${escapeHTML(item.name)}</div>
+          `).join('');
+        }
+      }
+    }
+
+    function renderDashboardWidgets() {
+      // Render Dashboard Striped Chart
+      renderStripedBarChart(
+        document.getElementById('dashboard-striped-chart'),
+        document.getElementById('dashboard-striped-labels')
+      );
+
+      // 1. Priority Assignments on Dashboard
+      const dashTasksEl = document.getElementById('dashboard-tasks-list');
+      const pendingTasks = appState.tasks.filter(t => !t.completed).slice(0, 5);
+
+      if (pendingTasks.length === 0) {
+        dashTasksEl.innerHTML = `<p class="text-xs text-stone-400 text-center py-6">All caught up! No pending assignments.</p>`;
+      } else {
+        dashTasksEl.innerHTML = pendingTasks.map(task => {
+          const sub = getSubjectById(task.subjectId);
+          const priorityColors = {
+            High: 'bg-[#FFF4F0] text-[#E56343] dark:bg-[#E56343]/20',
+            Medium: 'bg-[#FEF3D6] text-amber-800 dark:bg-amber-950/60 dark:text-amber-300',
+            Low: 'bg-[#FAF6F4] text-stone-500 dark:bg-stone-800 dark:text-stone-400'
+          };
+          return `
+            <div class="flex items-center justify-between gap-3 py-3 first:pt-1 last:pb-1">
+              <div class="flex items-center gap-3 min-w-0">
+                <input type="checkbox" onchange="toggleTask('${task.id}')" class="w-4 h-4 rounded accent-[#E56343] cursor-pointer shrink-0" />
+                <div class="min-w-0">
+                  <p class="text-sm font-semibold text-stone-800 dark:text-stone-100 truncate">${escapeHTML(task.title)}</p>
+                  <div class="flex items-center gap-2 mt-0.5">
+                    <span class="inline-block w-2 h-2 rounded-full" style="background:${sub.color}"></span>
+                    <span class="text-[11px] text-stone-400 truncate">${escapeHTML(sub.name)}</span>
+                  </div>
+                </div>
+              </div>
+              <span class="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 ${priorityColors[task.priority] || priorityColors.Medium}">${task.priority}</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 2. Course Progress Bars on Dashboard
+      const dashSubEl = document.getElementById('dashboard-subject-progress');
+      const last7 = new Set(getLast7DaysDates());
+
+      if (appState.subjects.length === 0) {
+        dashSubEl.innerHTML = `<p class="text-xs text-stone-400 text-center py-6">Add a course to track weekly study goals.</p>`;
+      } else {
+        dashSubEl.innerHTML = appState.subjects.map(sub => {
+          const loggedMins = appState.sessions
+            .filter(s => s.subjectId === sub.id && last7.has(s.date))
+            .reduce((acc, s) => acc + s.durationMinutes, 0);
+          const loggedHrs = loggedMins / 60;
+          const pct = sub.weeklyTargetHours > 0 ? Math.min(100, Math.round((loggedHrs / sub.weeklyTargetHours) * 100)) : 0;
+
+          return `
+            <div class="bg-[#FAF6F4] dark:bg-stone-800/60 p-3.5 rounded-2xl">
+              <div class="flex items-center justify-between text-xs mb-2">
+                <span class="font-bold text-stone-800 dark:text-stone-100 flex items-center gap-2 truncate">
+                  <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${sub.color}"></span>
+                  <span class="truncate">${escapeHTML(sub.name)}</span>
+                </span>
+                <span class="font-bold text-stone-700 dark:text-stone-300 shrink-0">${pct}%</span>
+              </div>
+              <div class="w-full h-2 bg-white dark:bg-stone-700 rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-500" style="width: ${pct}%; background-color: ${sub.color}"></div>
+              </div>
+              <div class="flex justify-between text-[10px] text-stone-400 mt-1.5">
+                <span>${sub.topics.filter(t => t.completed).length}/${sub.topics.length} chapters done</span>
+                <span>${loggedHrs.toFixed(1)} / ${sub.weeklyTargetHours}h this week</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function renderSubjects() {
+      const grid = document.getElementById('subjects-grid');
+      if (appState.subjects.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full bg-white dark:bg-stone-900 rounded-[24px] p-10 text-center border border-dashed border-stone-300 dark:border-stone-700">
+            <i class="fa-solid fa-book-open text-3xl text-[#E56343] mb-3"></i>
+            <h3 class="font-bold text-base">No Courses Yet</h3>
+            <p class="text-xs text-stone-400 mt-1 mb-4">Create your first course to track syllabus chapters and weekly study hours.</p>
+            <button onclick="openSubjectModal()" class="bg-[#E56343] text-white px-5 py-2.5 rounded-full text-xs font-semibold">Add Course</button>
+          </div>
+        `;
+        return;
+      }
+
+      const last7 = new Set(getLast7DaysDates());
+
+      grid.innerHTML = appState.subjects.map(sub => {
+        const totalTopics = sub.topics.length;
+        const doneTopics = sub.topics.filter(t => t.completed).length;
+        const syllabusPct = totalTopics > 0 ? Math.round((doneTopics / totalTopics) * 100) : 0;
+
+        const weekMins = appState.sessions
+          .filter(s => s.subjectId === sub.id && last7.has(s.date))
+          .reduce((acc, s) => acc + s.durationMinutes, 0);
+        const weekHrs = (weekMins / 60).toFixed(1);
+
+        const topicsHTML = sub.topics.length === 0
+          ? `<p class="text-xs text-stone-400 italic py-2">No syllabus chapters added yet.</p>`
+          : sub.topics.map(t => `
+              <div class="flex items-center justify-between gap-2 py-1.5 px-2.5 rounded-xl hover:bg-[#FAF6F4] dark:hover:bg-stone-800/60 group">
+                <label class="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0">
+                  <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTopic('${sub.id}', '${t.id}')" class="w-4 h-4 rounded accent-[#E56343] shrink-0" />
+                  <span class="text-xs sm:text-sm truncate ${t.completed ? 'line-through text-stone-400' : ''}">${escapeHTML(t.title)}</span>
+                </label>
+                <button onclick="deleteTopic('${sub.id}', '${t.id}')" class="opacity-0 group-hover:opacity-100 text-stone-400 hover:text-rose-500 text-xs px-1 transition-opacity" title="Delete chapter">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            `).join('');
+
+        return `
+          <div class="bg-white dark:bg-stone-900 rounded-[24px] shadow-[0_8px_28px_-12px_rgba(120,72,56,0.06)] dark:shadow-none border border-white/80 dark:border-stone-800 p-5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-start justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="w-3.5 h-3.5 rounded-full shrink-0" style="background:${sub.color}"></span>
+                  <h3 class="font-bold text-base truncate text-stone-900 dark:text-white">${escapeHTML(sub.name)}</h3>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                  <button onclick="openSubjectModal('${sub.id}')" class="p-1.5 text-stone-400 hover:text-[#E56343] rounded-full hover:bg-[#FAF6F4] dark:hover:bg-stone-800" title="Edit Course">
+                    <i class="fa-solid fa-pen text-xs"></i>
+                  </button>
+                  <button onclick="deleteSubject('${sub.id}')" class="p-1.5 text-stone-400 hover:text-rose-500 rounded-full hover:bg-[#FAF6F4] dark:hover:bg-stone-800" title="Delete Course">
+                    <i class="fa-solid fa-trash text-xs"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between text-xs text-stone-500 dark:text-stone-400 bg-[#FAF6F4] dark:bg-stone-800/60 px-3.5 py-2.5 rounded-2xl mb-4">
+                <span>Weekly: <strong class="text-stone-800 dark:text-stone-200">${weekHrs} / ${sub.weeklyTargetHours}h</strong></span>
+                <span>Syllabus: <strong class="text-[#E56343]">${syllabusPct}%</strong> (${doneTopics}/${totalTopics})</span>
+              </div>
+
+              <div class="w-full h-2 bg-[#FAF6F4] dark:bg-stone-800 rounded-full overflow-hidden mb-4">
+                <div class="h-full rounded-full transition-all duration-300" style="width:${syllabusPct}%; background:${sub.color}"></div>
+              </div>
+
+              <div class="space-y-0.5 max-h-48 overflow-y-auto mb-3 pr-1">
+                ${topicsHTML}
+              </div>
+            </div>
+
+            <form onsubmit="addTopicToSubject(event, '${sub.id}')" class="flex gap-2 pt-3 border-t border-stone-100 dark:border-stone-800">
+              <input id="topic-input-${sub.id}" type="text" placeholder="Add chapter or topic..." class="flex-1 rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-3.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#E56343]" />
+              <button type="submit" class="px-3.5 py-1.5 rounded-full bg-[#FFF4F0] dark:bg-stone-800 text-[#E56343] hover:bg-[#E56343] hover:text-white text-xs font-bold transition-colors">
+                + Add
+              </button>
+            </form>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTasks() {
+      const container = document.getElementById('tasks-list-container');
+      const filterSub = document.getElementById('task-filter-subject')?.value || 'all';
+      const filterStatus = document.getElementById('task-filter-status')?.value || 'all';
+
+      let filtered = appState.tasks.filter(t => {
+        if (filterSub !== 'all' && t.subjectId !== filterSub) return false;
+        if (filterStatus === 'pending' && t.completed) return false;
+        if (filterStatus === 'completed' && !t.completed) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-center py-10 text-sm text-stone-400">No assignments match your current filters.</div>`;
+        return;
+      }
+
+      const priorityBadge = {
+        High: 'bg-[#FFF4F0] text-[#E56343] border-[#FFC7B5] dark:bg-[#E56343]/20 dark:border-[#E56343]/40',
+        Medium: 'bg-[#FEF3D6] text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/50',
+        Low: 'bg-[#FAF6F4] text-stone-600 border-stone-200 dark:bg-stone-800 dark:text-stone-400 dark:border-stone-700'
+      };
+
+      container.innerHTML = filtered.map(task => {
+        const sub = getSubjectById(task.subjectId);
+        return `
+          <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 p-3.5 rounded-2xl border border-stone-100 dark:border-stone-800 bg-[#FAF6F4]/50 dark:bg-stone-800/30 hover:border-[#FFC7B5] dark:hover:border-[#E56343]/40 transition-colors">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask('${task.id}')" class="w-4 h-4 rounded accent-[#E56343] cursor-pointer shrink-0" />
+              <div class="min-w-0">
+                <p class="text-sm font-semibold ${task.completed ? 'line-through text-stone-400' : 'text-stone-800 dark:text-stone-100'}">${escapeHTML(task.title)}</p>
+                <div class="flex flex-wrap items-center gap-3 mt-1 text-xs text-stone-400">
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full" style="background:${sub.color}"></span>
+                    ${escapeHTML(sub.name)}
+                  </span>
+                  <span><i class="fa-regular fa-calendar mr-1"></i>${escapeHTML(task.dueDate || 'No date')}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 ml-auto">
+              <span class="text-[11px] font-bold px-3 py-0.5 rounded-full border ${priorityBadge[task.priority] || priorityBadge.Medium}">${task.priority}</span>
+              <button onclick="deleteTask('${task.id}')" class="p-2 text-stone-400 hover:text-rose-500 rounded-full hover:bg-white dark:hover:bg-stone-800 transition-colors" title="Delete Assignment">
+                <i class="fa-solid fa-trash text-xs"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function setChartMode(mode) {
+      appState.chartMode = mode;
+      saveState();
+
+      const pairs = [
+        ['chart-mode-daily', 'chart-mode-subject'],
+        ['dash-chart-daily', 'dash-chart-subject']
+      ];
+
+      pairs.forEach(([dId, sId]) => {
+        const dailyBtn = document.getElementById(dId);
+        const subBtn = document.getElementById(sId);
+        if (!dailyBtn || !subBtn) return;
+        if (mode === 'daily') {
+          dailyBtn.className = 'px-3 py-1 rounded-full text-xs font-semibold transition-all bg-white dark:bg-stone-700 text-stone-900 dark:text-white shadow-sm';
+          subBtn.className = 'px-3 py-1 rounded-full text-xs font-semibold transition-all text-stone-500 dark:text-stone-400';
+        } else {
+          subBtn.className = 'px-3 py-1 rounded-full text-xs font-semibold transition-all bg-white dark:bg-stone-700 text-stone-900 dark:text-white shadow-sm';
+          dailyBtn.className = 'px-3 py-1 rounded-full text-xs font-semibold transition-all text-stone-500 dark:text-stone-400';
+        }
+      });
+
+      renderDashboardWidgets();
+      renderAnalytics();
+    }
+
+    function renderAnalytics() {
+      renderStripedBarChart(
+        document.getElementById('analytics-chart-container'),
+        document.getElementById('analytics-chart-labels')
+      );
+
+      const subBarsEl = document.getElementById('analytics-subject-bars');
+      const last7Set = new Set(getLast7DaysDates());
+      subBarsEl.innerHTML = appState.subjects.map(sub => {
+        const mins = appState.sessions
+          .filter(s => s.subjectId === sub.id && last7Set.has(s.date))
+          .reduce((acc, s) => acc + s.durationMinutes, 0);
+        const hrs = mins / 60;
+        const pct = sub.weeklyTargetHours > 0 ? Math.min(100, Math.round((hrs / sub.weeklyTargetHours) * 100)) : 0;
+
+        return `
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="font-bold truncate pr-2">${escapeHTML(sub.name)}</span>
+              <span class="font-mono text-stone-500 shrink-0">${hrs.toFixed(1)} / ${sub.weeklyTargetHours}h (${pct}%)</span>
+            </div>
+            <div class="w-full h-2.5 bg-[#FAF6F4] dark:bg-stone-800 rounded-full overflow-hidden">
+              <div class="h-full rounded-full" style="width:${pct}%; background:${sub.color}"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const totalMins = appState.sessions.reduce((acc, s) => acc + s.durationMinutes, 0);
+      document.getElementById('analytics-total-hours').textContent = `${(totalMins / 60).toFixed(1)} hrs`;
+
+      const tbody = document.getElementById('session-log-tbody');
+      if (appState.sessions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-xs text-stone-400">No study sessions logged yet. Start the focus timer or log a manual session!</td></tr>`;
+      } else {
+        tbody.innerHTML = appState.sessions.map(ses => {
+          const sub = getSubjectById(ses.subjectId);
+          return `
+            <tr class="hover:bg-[#FAF6F4]/70 dark:hover:bg-stone-800/40 transition-colors">
+              <td class="py-3 px-4 font-mono text-xs text-stone-500 dark:text-stone-400 whitespace-nowrap">${escapeHTML(ses.date)}</td>
+              <td class="py-3 px-4 whitespace-nowrap">
+                <span class="inline-flex items-center gap-2 font-semibold text-xs sm:text-sm">
+                  <span class="w-2.5 h-2.5 rounded-full" style="background:${sub.color}"></span>
+                  ${escapeHTML(sub.name)}
+                </span>
+              </td>
+              <td class="py-3 px-4 font-mono text-xs font-bold whitespace-nowrap">${ses.durationMinutes} min</td>
+              <td class="py-3 px-4 text-xs sm:text-sm text-stone-600 dark:text-stone-300 max-w-xs truncate">${escapeHTML(ses.note || '—')}</td>
+              <td class="py-3 px-4 text-right">
+                <button onclick="deleteSession('${ses.id}')" class="text-stone-400 hover:text-rose-500 p-1.5 rounded-full" title="Delete log">
+                  <i class="fa-solid fa-trash text-xs"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    function renderAll() {
+      renderDemoBanner();
+      populateSubjectDropdowns();
+      updateTimerUI();
+      renderDashboardKPIs();
+      renderDashboardWidgets();
+      renderSubjects();
+      renderTasks();
+      renderAnalytics();
+    }
+
+    function renderDemoBanner() {
+      const banner = document.getElementById('demo-data-banner');
+      if (!banner) return;
+      if (appState.isDemoData && !appState.demoBannerDismissed) {
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    function dismissDemoBanner() {
+      appState.demoBannerDismissed = true;
+      saveState();
+      renderDemoBanner();
+    }
+
+    function clearDemoDataFromBanner() {
+      clearAllData();
+      showToast('Demo data cleared! You can now add your own courses and assignments.', 'success');
+    }
+
+    // -------------------- MODALS & DATA EXPORT / IMPORT --------------------
+    function openModal(modalId) {
+      if (modalId === 'timer-settings-modal') {
+        document.getElementById('setting-focus-min').value = appState.settings.focusMinutes;
+        document.getElementById('setting-short-min').value = appState.settings.shortBreakMinutes;
+        document.getElementById('setting-long-min').value = appState.settings.longBreakMinutes;
+        document.getElementById('setting-sound-enabled').checked = appState.settings.soundEnabled;
+      }
+      if (modalId === 'manual-session-modal') {
+        document.getElementById('manual-session-date').value = getLocalDateString();
+      }
+      if (modalId === 'data-modal') {
+        hideClearConfirmation();
+      }
+      document.getElementById(modalId).classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+
+    function downloadBrandLogoPNG() {
+      const svgMarkup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="256" height="256" fill="none">
+        <defs>
+          <linearGradient id="g1" x1="16" y1="12" x2="112" y2="116" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#F38164"/>
+            <stop offset="100%" stop-color="#E56343"/>
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="116" height="116" rx="34" fill="url(#g1)"/>
+        <rect x="11" y="11" width="106" height="106" rx="29" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="2"/>
+        <path d="M64 34L24 53L64 72L104 53L64 34Z" fill="#FFFFFF"/>
+        <path d="M40 64.5V80.5C40 87.5 50.7 93 64 93C77.3 93 88 87.5 88 80.5V64.5L64 76L40 64.5Z" fill="#FFF4F0"/>
+        <path d="M96 56.5V79" stroke="#F3C152" stroke-width="4.5" stroke-linecap="round"/>
+        <circle cx="96" cy="83" r="4.5" fill="#F3C152"/>
+        <circle cx="64" cy="53" r="3.5" fill="#E56343"/>
+      </svg>`;
+
+      const img = new Image();
+      const svgBlob = new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+
+      img.onload = function () {
+        const canvas = document.createElement('canvas');
+        canvas.width = 256;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, 256, 256);
+        URL.revokeObjectURL(url);
+
+        canvas.toBlob(function (pngBlob) {
+          const pngUrl = URL.createObjectURL(pngBlob);
+          const a = document.createElement('a');
+          a.href = pngUrl;
+          a.download = 'focusflow-logo.png';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(pngUrl);
+          showToast('Downloaded focusflow-logo.png! Ready for Google Sites.', 'success');
+        }, 'image/png');
+      };
+      img.src = url;
+    }
+
+    function copyWholeAppCode() {
+      const fullHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(fullHtml)
+          .then(() => showToast('Full HTML code copied! Paste it into GitHub as index.html.', 'success'))
+          .catch(() => fallbackCopyCode(fullHtml));
+      } else {
+        fallbackCopyCode(fullHtml);
+      }
+    }
+
+    function fallbackCopyCode(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Full HTML code copied! Paste it into GitHub as index.html.', 'success');
+      } catch (err) {
+        showToast('Unable to copy automatically. Please use Export in the editor.', 'error');
+      }
+      textarea.remove();
+    }
+
+    function exportDataJSON() {
+      const dataStr = JSON.stringify(appState, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `focusflow-backup-${getLocalDateString()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast('Backup JSON exported!', 'success');
+    }
+
+    function importDataJSON(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        try {
+          const imported = JSON.parse(evt.target.result);
+          if (!imported.subjects || !imported.sessions) {
+            throw new Error('Invalid backup structure');
+          }
+          appState = { ...appState, ...imported, isDemoData: false, demoBannerDismissed: true };
+          saveState();
+          applyTheme();
+          setTimerMode('focus');
+          renderAll();
+          closeModal('data-modal');
+          showToast('Study data imported successfully!', 'success');
+        } catch (err) {
+          showToast('Invalid JSON backup file.', 'error');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    }
+
+    function loadSampleData() {
+      const currentTheme = appState.theme;
+      appState = getStarterDataset();
+      appState.theme = currentTheme;
+      appState.isDemoData = true;
+      appState.demoBannerDismissed = false;
+      saveState();
+      setTimerMode('focus');
+      renderAll();
+      closeModal('data-modal');
+      showToast('Sample academic dataset loaded!', 'success');
+    }
+
+    function showClearConfirmation() {
+      document.getElementById('clear-data-initial-btn').classList.add('hidden');
+      document.getElementById('clear-data-actions').classList.remove('hidden');
+    }
+
+    function hideClearConfirmation() {
+      document.getElementById('clear-data-initial-btn').classList.remove('hidden');
+      document.getElementById('clear-data-actions').classList.add('hidden');
+    }
+
+    function clearAllData() {
+      const currentTheme = appState.theme;
+      appState = {
+        theme: currentTheme,
+        activeTab: 'dashboard',
+        chartMode: 'daily',
+        isDemoData: false,
+        demoBannerDismissed: true,
+        settings: { focusMinutes: 25, shortBreakMinutes: 5, longBreakMinutes: 15, soundEnabled: true },
+        subjects: [],
+        tasks: [],
+        sessions: []
+      };
+      saveState();
+      setTimerMode('focus');
+      renderAll();
+      closeModal('data-modal');
+      showToast('All data cleared.', 'info');
+    }
+
+    // -------------------- INITIALIZATION --------------------
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      applyTheme();
+      document.getElementById('task-date-input').value = getLocalDateString();
+      setTimerMode('focus');
+      switchTab(appState.activeTab || 'dashboard');
+    });
+  </script>
+</body>
+</html>
