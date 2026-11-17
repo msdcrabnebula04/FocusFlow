@@ -247,6 +247,53 @@
       <!-- ==================== TAB 1: DASHBOARD & FOCUS TIMER ==================== -->
       <section id="tab-dashboard" class="tab-content space-y-5">
 
+        <!-- Live Exam & Event Countdown Clock Widget -->
+        <div class="bg-white dark:bg-stone-900 rounded-[24px] p-5 shadow-[0_8px_28px_-12px_rgba(120,72,56,0.06)] dark:shadow-none border border-white/80 dark:border-stone-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div class="flex items-start sm:items-center gap-3.5 min-w-0">
+            <div class="w-11 h-11 rounded-2xl bg-[#FFF4F0] dark:bg-[#E56343]/20 text-[#E56343] flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-calendar-check text-lg"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#FEF3D6] text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                  Exam &amp; Event Countdown
+                </span>
+                <span id="exam-countdown-date-label" class="text-xs text-stone-400 font-medium truncate"></span>
+              </div>
+              <div class="flex flex-wrap items-center gap-2 mt-1.5">
+                <select id="exam-countdown-select" onchange="selectExamCountdown(this.value)" class="rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-3.5 py-1.5 text-sm font-bold text-stone-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#E56343] max-w-full sm:max-w-xs truncate">
+                </select>
+                <button onclick="openModal('exam-countdown-modal')" class="px-3 py-1.5 rounded-full bg-[#FFF4F0] dark:bg-[#E56343]/20 hover:bg-[#FFE4DB] text-[#E56343] text-xs font-semibold transition-colors flex items-center gap-1 shrink-0">
+                  <i class="fa-solid fa-plus text-[10px]"></i> New Event
+                </button>
+                <button id="delete-exam-countdown-btn" onclick="deleteSelectedExamCountdown()" title="Delete selected countdown" class="w-8 h-8 rounded-full bg-[#FAF6F4] dark:bg-stone-800 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-stone-400 hover:text-rose-500 flex items-center justify-center transition-colors shrink-0">
+                  <i class="fa-solid fa-trash text-xs"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Ticking Days : Hours : Minutes : Seconds Boxes -->
+          <div id="exam-countdown-boxes" class="grid grid-cols-4 gap-2 sm:gap-3 shrink-0">
+            <div class="bg-[#FAF6F4] dark:bg-stone-800/80 border border-stone-200/60 dark:border-stone-700/60 rounded-2xl px-3 sm:px-4 py-2 text-center min-w-[64px] sm:min-w-[74px]">
+              <div id="exam-cd-days" class="font-mono text-xl sm:text-2xl font-extrabold text-[#E56343] leading-none">00</div>
+              <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mt-1">Days</div>
+            </div>
+            <div class="bg-[#FAF6F4] dark:bg-stone-800/80 border border-stone-200/60 dark:border-stone-700/60 rounded-2xl px-3 sm:px-4 py-2 text-center min-w-[64px] sm:min-w-[74px]">
+              <div id="exam-cd-hours" class="font-mono text-xl sm:text-2xl font-extrabold text-stone-900 dark:text-white leading-none">00</div>
+              <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mt-1">Hours</div>
+            </div>
+            <div class="bg-[#FAF6F4] dark:bg-stone-800/80 border border-stone-200/60 dark:border-stone-700/60 rounded-2xl px-3 sm:px-4 py-2 text-center min-w-[64px] sm:min-w-[74px]">
+              <div id="exam-cd-mins" class="font-mono text-xl sm:text-2xl font-extrabold text-stone-900 dark:text-white leading-none">00</div>
+              <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mt-1">Mins</div>
+            </div>
+            <div class="bg-[#FAF6F4] dark:bg-stone-800/80 border border-stone-200/60 dark:border-stone-700/60 rounded-2xl px-3 sm:px-4 py-2 text-center min-w-[64px] sm:min-w-[74px]">
+              <div id="exam-cd-secs" class="font-mono text-xl sm:text-2xl font-extrabold text-[#F3C152] leading-none">00</div>
+              <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mt-1">Secs</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Top Bento Row: Active Focus Session Card + Progress Summary + Activity Dots + Motivational Banner -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
 
@@ -255,12 +302,41 @@
             <div>
               <!-- Mode Selector Pills -->
               <div class="flex flex-wrap items-center gap-1 bg-[#FAF6F4] dark:bg-stone-800 p-1 rounded-full mb-4">
-                <button onclick="setTimerMode('focus')" id="mode-focus" class="timer-mode-btn flex-1 py-1.5 px-2.5 rounded-full text-[11px] font-bold transition-all">Focus</button>
-                <button onclick="setTimerMode('shortBreak')" id="mode-shortBreak" class="timer-mode-btn flex-1 py-1.5 px-2.5 rounded-full text-[11px] font-bold transition-all">Short</button>
-                <button onclick="setTimerMode('longBreak')" id="mode-longBreak" class="timer-mode-btn flex-1 py-1.5 px-2.5 rounded-full text-[11px] font-bold transition-all">Long</button>
-                <button onclick="setTimerMode('stopwatch')" id="mode-stopwatch" class="timer-mode-btn flex-1 py-1.5 px-2.5 rounded-full text-[11px] font-bold transition-all flex items-center justify-center gap-1">
+                <button onclick="setTimerMode('focus')" id="mode-focus" class="timer-mode-btn flex-1 py-1.5 px-2 rounded-full text-[11px] font-bold transition-all">Focus</button>
+                <button onclick="setTimerMode('shortBreak')" id="mode-shortBreak" class="timer-mode-btn flex-1 py-1.5 px-2 rounded-full text-[11px] font-bold transition-all">Short</button>
+                <button onclick="setTimerMode('longBreak')" id="mode-longBreak" class="timer-mode-btn flex-1 py-1.5 px-2 rounded-full text-[11px] font-bold transition-all">Long</button>
+                <button onclick="setTimerMode('countdown')" id="mode-countdown" class="timer-mode-btn flex-1 py-1.5 px-2 rounded-full text-[11px] font-bold transition-all flex items-center justify-center gap-1">
+                  <i class="fa-solid fa-hourglass-half text-[10px]"></i> Timer
+                </button>
+                <button onclick="setTimerMode('stopwatch')" id="mode-stopwatch" class="timer-mode-btn flex-1 py-1.5 px-2 rounded-full text-[11px] font-bold transition-all flex items-center justify-center gap-1">
                   <i class="fa-solid fa-stopwatch text-[10px]"></i> Watch
                 </button>
+              </div>
+
+              <!-- Custom Countdown Duration Controls (Visible in Timer mode when paused/stopped) -->
+              <div id="custom-countdown-controls" class="hidden mb-3 bg-[#FAF6F4] dark:bg-stone-800/70 rounded-2xl p-2.5 border border-stone-200/60 dark:border-stone-700/60">
+                <div class="flex items-center justify-center gap-1.5">
+                  <div class="flex flex-col items-center">
+                    <input id="cd-input-hrs" type="number" min="0" max="23" value="0" onchange="applyCustomCountdownInputs()" oninput="applyCustomCountdownInputs()" class="w-12 text-center font-mono text-xs font-bold py-1.5 rounded-xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-700 focus:outline-none focus:ring-2 focus:ring-[#E56343]" />
+                    <span class="text-[9px] font-semibold text-stone-400 mt-0.5 uppercase">Hrs</span>
+                  </div>
+                  <span class="font-mono font-bold text-stone-400 pb-3">:</span>
+                  <div class="flex flex-col items-center">
+                    <input id="cd-input-mins" type="number" min="0" max="59" value="15" onchange="applyCustomCountdownInputs()" oninput="applyCustomCountdownInputs()" class="w-12 text-center font-mono text-xs font-bold py-1.5 rounded-xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-700 focus:outline-none focus:ring-2 focus:ring-[#E56343]" />
+                    <span class="text-[9px] font-semibold text-stone-400 mt-0.5 uppercase">Min</span>
+                  </div>
+                  <span class="font-mono font-bold text-stone-400 pb-3">:</span>
+                  <div class="flex flex-col items-center">
+                    <input id="cd-input-secs" type="number" min="0" max="59" value="0" onchange="applyCustomCountdownInputs()" oninput="applyCustomCountdownInputs()" class="w-12 text-center font-mono text-xs font-bold py-1.5 rounded-xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-700 focus:outline-none focus:ring-2 focus:ring-[#E56343]" />
+                    <span class="text-[9px] font-semibold text-stone-400 mt-0.5 uppercase">Sec</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-center gap-1.5 mt-2">
+                  <button type="button" onclick="setQuickCountdownPreset(10)" class="px-2.5 py-0.5 rounded-full bg-white dark:bg-stone-900 hover:bg-[#FFF4F0] text-[10px] font-semibold text-stone-600 dark:text-stone-300 border border-stone-200/70 dark:border-stone-700">10m</button>
+                  <button type="button" onclick="setQuickCountdownPreset(20)" class="px-2.5 py-0.5 rounded-full bg-white dark:bg-stone-900 hover:bg-[#FFF4F0] text-[10px] font-semibold text-stone-600 dark:text-stone-300 border border-stone-200/70 dark:border-stone-700">20m</button>
+                  <button type="button" onclick="setQuickCountdownPreset(45)" class="px-2.5 py-0.5 rounded-full bg-white dark:bg-stone-900 hover:bg-[#FFF4F0] text-[10px] font-semibold text-stone-600 dark:text-stone-300 border border-stone-200/70 dark:border-stone-700">45m</button>
+                  <button type="button" onclick="setQuickCountdownPreset(60)" class="px-2.5 py-0.5 rounded-full bg-white dark:bg-stone-900 hover:bg-[#FFF4F0] text-[10px] font-semibold text-stone-600 dark:text-stone-300 border border-stone-200/70 dark:border-stone-700">1h</button>
+                </div>
               </div>
 
               <!-- Circular Ring & Live Clock -->
@@ -848,30 +924,42 @@
     </div>
   </div>
 
+  <!-- 5. Add Exam / Event Countdown Modal -->
+  <div id="exam-countdown-modal" class="fixed inset-0 z-50 hidden bg-stone-950/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-stone-900 rounded-[28px] max-w-md w-full p-6 border border-stone-100 dark:border-stone-800 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">Add Exam or Event Countdown</h3>
+        <button onclick="closeModal('exam-countdown-modal')" class="w-8 h-8 rounded-full bg-[#FAF6F4] dark:bg-stone-800 text-stone-400 hover:text-stone-700 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form onsubmit="addExamCountdown(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1.5">Exam / Milestone Title</label>
+          <input id="exam-cd-title-input" type="text" required placeholder="e.g., Data Structures Final Exam" class="w-full rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#E56343]" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1.5">Target Date</label>
+            <input id="exam-cd-date-input" type="date" required class="w-full rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#E56343]" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1.5">Target Time</label>
+            <input id="exam-cd-time-input" type="time" required value="09:00" class="w-full rounded-full bg-[#FAF6F4] dark:bg-stone-800 border border-stone-200/70 dark:border-stone-700 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#E56343]" />
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-3">
+          <button type="button" onclick="closeModal('exam-countdown-modal')" class="px-4 py-2 rounded-full text-sm font-medium bg-[#FAF6F4] dark:bg-stone-800">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-full text-sm font-semibold bg-[#E56343] hover:bg-[#D14F30] text-white">Save Countdown</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ==================== JAVASCRIPT APPLICATION LOGIC ==================== -->
   <script>
     // -------------------- STATE & STORAGE --------------------
     const STORAGE_KEY = 'focusflow_study_os_v1';
-    let isEmbeddedIframe = false;
-    let storageAvailable = true;
-    let iframeBannerDismissed = false;
-
-    function detectStorageEnvironment() {
-      try {
-        isEmbeddedIframe = window.self !== window.top;
-      } catch (e) {
-        isEmbeddedIframe = true;
-      }
-
-      try {
-        const testKey = '__focusflow_storage_test__';
-        localStorage.setItem(testKey, '1');
-        localStorage.removeItem(testKey);
-        storageAvailable = true;
-      } catch (e) {
-        storageAvailable = false;
-      }
-    }
 
     let appState = {
       theme: 'light',
@@ -879,6 +967,9 @@
       chartMode: 'daily', // 'daily' | 'subject'
       isDemoData: false,
       demoBannerDismissed: false,
+      customCountdownSeconds: 15 * 60,
+      selectedCountdownId: 'cd-1',
+      countdowns: [],
       settings: {
         focusMinutes: 25,
         shortBreakMinutes: 5,
@@ -890,9 +981,11 @@
       sessions: []
     };
 
+    let examCountdownIntervalId = null;
+
     // Timer Runtime Variables
     let timerState = {
-      mode: 'focus', // 'focus' | 'shortBreak' | 'longBreak' | 'stopwatch'
+      mode: 'focus', // 'focus' | 'shortBreak' | 'longBreak' | 'countdown' | 'stopwatch'
       totalSeconds: 25 * 60,
       remainingSeconds: 25 * 60,
       isRunning: false,
@@ -995,6 +1088,7 @@
         chartMode: 'daily',
         isDemoData: false,
         demoBannerDismissed: true,
+        customCountdownSeconds: 15 * 60,
         settings: {
           focusMinutes: 25,
           shortBreakMinutes: 5,
@@ -1008,12 +1102,26 @@
     }
 
     function getStarterDataset() {
+      const futureDate1 = new Date();
+      futureDate1.setDate(futureDate1.getDate() + 12);
+      const futureIso1 = `${getLocalDateString(futureDate1)}T09:00:00`;
+
+      const futureDate2 = new Date();
+      futureDate2.setDate(futureDate2.getDate() + 24);
+      const futureIso2 = `${getLocalDateString(futureDate2)}T14:00:00`;
+
       return {
         theme: 'light',
         activeTab: 'dashboard',
         chartMode: 'daily',
         isDemoData: true,
         demoBannerDismissed: false,
+        customCountdownSeconds: 15 * 60,
+        selectedCountdownId: 'cd-1',
+        countdowns: [
+          { id: 'cd-1', title: 'Algorithms & Data Structures Midterm', targetISO: futureIso1 },
+          { id: 'cd-2', title: 'Operating Systems Final Project', targetISO: futureIso2 }
+        ],
         settings: {
           focusMinutes: 25,
           shortBreakMinutes: 5,
@@ -1118,6 +1226,7 @@
           appState = {
             ...appState,
             ...parsed,
+            countdowns: Array.isArray(parsed.countdowns) ? parsed.countdowns : [],
             settings: { ...appState.settings, ...(parsed.settings || {}) }
           };
         } else {
@@ -1127,6 +1236,133 @@
       } catch (err) {
         appState = getStarterDataset();
       }
+    }
+
+    // -------------------- EXAM & EVENT COUNTDOWN CLOCK --------------------
+    function ensureDefaultExamCountdown() {
+      if (!Array.isArray(appState.countdowns)) {
+        appState.countdowns = [];
+      }
+    }
+
+    function renderExamCountdownSelect() {
+      ensureDefaultExamCountdown();
+      const selectEl = document.getElementById('exam-countdown-select');
+      const deleteBtn = document.getElementById('delete-exam-countdown-btn');
+      if (!selectEl) return;
+
+      if (appState.countdowns.length === 0) {
+        selectEl.innerHTML = `<option value="">No upcoming events — click + New Event</option>`;
+        if (deleteBtn) deleteBtn.classList.add('hidden');
+        updateExamCountdownTick();
+        return;
+      }
+
+      if (deleteBtn) deleteBtn.classList.remove('hidden');
+
+      if (!appState.countdowns.some(c => c.id === appState.selectedCountdownId)) {
+        appState.selectedCountdownId = appState.countdowns[0].id;
+      }
+
+      selectEl.innerHTML = appState.countdowns.map(cd =>
+        `<option value="${cd.id}">${escapeHTML(cd.title)}</option>`
+      ).join('');
+      selectEl.value = appState.selectedCountdownId;
+      updateExamCountdownTick();
+    }
+
+    function selectExamCountdown(id) {
+      appState.selectedCountdownId = id;
+      saveState();
+      updateExamCountdownTick();
+    }
+
+    function addExamCountdown(e) {
+      e.preventDefault();
+      const title = document.getElementById('exam-cd-title-input').value.trim();
+      const dateVal = document.getElementById('exam-cd-date-input').value;
+      const timeVal = document.getElementById('exam-cd-time-input').value || '09:00';
+      if (!title || !dateVal) return;
+
+      const newId = 'cd-' + Date.now();
+      appState.countdowns.push({
+        id: newId,
+        title,
+        targetISO: `${dateVal}T${timeVal}:00`
+      });
+      appState.selectedCountdownId = newId;
+
+      document.getElementById('exam-cd-title-input').value = '';
+      saveState();
+      closeModal('exam-countdown-modal');
+      renderExamCountdownSelect();
+      showToast('Exam/Event countdown added!', 'success');
+    }
+
+    function deleteSelectedExamCountdown() {
+      if (!appState.selectedCountdownId) return;
+      appState.countdowns = appState.countdowns.filter(c => c.id !== appState.selectedCountdownId);
+      appState.selectedCountdownId = appState.countdowns[0]?.id || '';
+      saveState();
+      renderExamCountdownSelect();
+      showToast('Countdown removed.', 'info');
+    }
+
+    function updateExamCountdownTick() {
+      const daysEl = document.getElementById('exam-cd-days');
+      const hoursEl = document.getElementById('exam-cd-hours');
+      const minsEl = document.getElementById('exam-cd-mins');
+      const secsEl = document.getElementById('exam-cd-secs');
+      const dateLabelEl = document.getElementById('exam-countdown-date-label');
+      if (!daysEl || !hoursEl || !minsEl || !secsEl) return;
+
+      const activeCd = (appState.countdowns || []).find(c => c.id === appState.selectedCountdownId);
+      if (!activeCd) {
+        daysEl.textContent = '00';
+        hoursEl.textContent = '00';
+        minsEl.textContent = '00';
+        secsEl.textContent = '00';
+        if (dateLabelEl) dateLabelEl.textContent = 'Set a target exam or deadline date';
+        return;
+      }
+
+      const targetDate = new Date(activeCd.targetISO);
+      if (dateLabelEl && !isNaN(targetDate.getTime())) {
+        dateLabelEl.textContent = targetDate.toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+
+      const diffMs = targetDate.getTime() - Date.now();
+      if (isNaN(diffMs) || diffMs <= 0) {
+        daysEl.textContent = '00';
+        hoursEl.textContent = '00';
+        minsEl.textContent = '00';
+        secsEl.textContent = '00';
+        if (dateLabelEl) dateLabelEl.textContent = 'Target date reached!';
+        return;
+      }
+
+      const totalSeconds = Math.floor(diffMs / 1000);
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      daysEl.textContent = String(days).padStart(2, '0');
+      hoursEl.textContent = String(hours).padStart(2, '0');
+      minsEl.textContent = String(minutes).padStart(2, '0');
+      secsEl.textContent = String(seconds).padStart(2, '0');
+    }
+
+    function startExamCountdownClock() {
+      if (examCountdownIntervalId) clearInterval(examCountdownIntervalId);
+      updateExamCountdownTick();
+      examCountdownIntervalId = setInterval(updateExamCountdownTick, 1000);
     }
 
     // -------------------- THEME & TAB NAVIGATION --------------------
@@ -1177,7 +1413,6 @@
         activeSection.classList.remove('hidden');
       }
 
-      // Desktop Floating Sidebar Active Pill (Warm Coral #E56343 matching Eduhive active tab)
       document.querySelectorAll('.nav-btn').forEach(btn => {
         if (btn.dataset.tab === tabName) {
           btn.className = 'nav-btn w-full px-4 py-3 rounded-2xl text-sm font-semibold transition-all flex items-center gap-3 bg-[#E56343] text-white shadow-md shadow-[#E56343]/25';
@@ -1186,7 +1421,6 @@
         }
       });
 
-      // Mobile Bottom Bar Active Pill
       document.querySelectorAll('.nav-btn-mobile').forEach(btn => {
         if (btn.dataset.tab === tabName) {
           btn.className = 'nav-btn-mobile flex-1 py-1.5 rounded-2xl text-[11px] font-bold flex flex-col items-center gap-1 bg-[#FFF4F0] dark:bg-[#E56343]/20 text-[#E56343]';
@@ -1222,6 +1456,11 @@
       if (mode === 'stopwatch') {
         timerState.totalSeconds = 60;
         timerState.remainingSeconds = 0;
+      } else if (mode === 'countdown') {
+        const customSec = Math.max(1, appState.customCountdownSeconds || 15 * 60);
+        timerState.totalSeconds = customSec;
+        timerState.remainingSeconds = customSec;
+        syncCustomCountdownInputs(customSec);
       } else {
         let mins = appState.settings.focusMinutes;
         if (mode === 'shortBreak') mins = appState.settings.shortBreakMinutes;
@@ -1232,6 +1471,44 @@
       }
 
       renderStopwatchLaps();
+      updateTimerUI();
+    }
+
+    function syncCustomCountdownInputs(totalSec) {
+      const hrsEl = document.getElementById('cd-input-hrs');
+      const minsEl = document.getElementById('cd-input-mins');
+      const secsEl = document.getElementById('cd-input-secs');
+      if (!hrsEl || !minsEl || !secsEl) return;
+
+      hrsEl.value = Math.floor(totalSec / 3600);
+      minsEl.value = Math.floor((totalSec % 3600) / 60);
+      secsEl.value = totalSec % 60;
+    }
+
+    function applyCustomCountdownInputs() {
+      if (timerState.mode !== 'countdown' || timerState.isRunning) return;
+      const hrs = Math.max(0, Math.min(23, parseInt(document.getElementById('cd-input-hrs').value, 10) || 0));
+      const mins = Math.max(0, Math.min(59, parseInt(document.getElementById('cd-input-mins').value, 10) || 0));
+      const secs = Math.max(0, Math.min(59, parseInt(document.getElementById('cd-input-secs').value, 10) || 0));
+
+      const total = Math.max(1, hrs * 3600 + mins * 60 + secs);
+      appState.customCountdownSeconds = total;
+      timerState.totalSeconds = total;
+      timerState.remainingSeconds = total;
+      timerState.elapsedFocusSeconds = 0;
+      saveState();
+      updateTimerUI();
+    }
+
+    function setQuickCountdownPreset(minutes) {
+      if (timerState.isRunning) pauseTimer();
+      const total = minutes * 60;
+      appState.customCountdownSeconds = total;
+      timerState.totalSeconds = total;
+      timerState.remainingSeconds = total;
+      timerState.elapsedFocusSeconds = 0;
+      syncCustomCountdownInputs(total);
+      saveState();
       updateTimerUI();
     }
 
@@ -1276,26 +1553,42 @@
       }
 
       // Mode pills styling
-      ['focus', 'shortBreak', 'longBreak', 'stopwatch'].forEach(m => {
+      ['focus', 'shortBreak', 'longBreak', 'countdown', 'stopwatch'].forEach(m => {
         const btn = document.getElementById(`mode-${m}`);
         if (!btn) return;
         if (m === timerState.mode) {
-          btn.className = 'timer-mode-btn flex-1 py-1.5 px-2.5 rounded-full text-[11px] font-bold transition-all bg-[#E56343] text-white shadow-sm flex items-center justify-center gap-1';
+          btn.className = 'timer-mode-btn flex-1 py-1.5 px-2 rounded-full text-[11px] font-bold transition-all bg-[#E56343] text-white shadow-sm flex items-center justify-center gap-1';
         } else {
-          btn.className = 'timer-mode-btn flex-1 py-1.5 px-2.5 rounded-full text-[11px] font-semibold transition-all text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 flex items-center justify-center gap-1';
+          btn.className = 'timer-mode-btn flex-1 py-1.5 px-2 rounded-full text-[11px] font-semibold transition-all text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 flex items-center justify-center gap-1';
         }
       });
 
       const badge = document.getElementById('timer-status-badge');
       const lapBtn = document.getElementById('stopwatch-lap-btn');
       const finishBtn = document.getElementById('timer-finish-btn');
+      const customCdControls = document.getElementById('custom-countdown-controls');
+
+      if (customCdControls) {
+        if (timerState.mode === 'countdown' && !timerState.isRunning && timerState.remainingSeconds === timerState.totalSeconds) {
+          customCdControls.classList.remove('hidden');
+        } else {
+          customCdControls.classList.add('hidden');
+        }
+      }
 
       if (isStopwatch) {
-        ring.classList.remove('text-[#E56343]', 'text-emerald-500');
+        ring.classList.remove('text-[#E56343]', 'text-emerald-500', 'text-amber-500');
         ring.classList.add('text-[#F3C152]');
         badge.className = 'text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#FEF3D6] text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 mb-1';
         badge.textContent = timerState.isRunning ? 'Stopwatch' : 'Open Timer';
         lapBtn.classList.remove('hidden');
+        finishBtn.classList.remove('hidden');
+      } else if (timerState.mode === 'countdown') {
+        ring.classList.remove('text-emerald-500', 'text-[#F3C152]');
+        ring.classList.add('text-[#E56343]');
+        badge.className = 'text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#FFF4F0] text-[#E56343] dark:bg-[#E56343]/20 mb-1';
+        badge.textContent = timerState.isRunning ? 'Counting Down' : 'Countdown Timer';
+        lapBtn.classList.add('hidden');
         finishBtn.classList.remove('hidden');
       } else if (timerState.mode === 'focus') {
         ring.classList.remove('text-emerald-500', 'text-[#F3C152]');
@@ -1322,7 +1615,9 @@
         const hasProgress = isStopwatch
           ? getStopwatchElapsedMs() > 0
           : timerState.remainingSeconds < timerState.totalSeconds;
-        const startLabel = hasProgress ? 'Resume' : (isStopwatch ? 'Start Watch' : 'Start Focus');
+        const startLabel = hasProgress
+          ? 'Resume'
+          : (isStopwatch ? 'Start Watch' : (timerState.mode === 'countdown' ? 'Start Timer' : 'Start Focus'));
         startBtn.innerHTML = `<i class="fa-solid fa-play"></i> <span>${startLabel}</span>`;
         startBtn.classList.remove('bg-[#F3C152]', 'hover:bg-[#E8B038]', 'text-stone-900');
         startBtn.classList.add('bg-[#E56343]', 'hover:bg-[#D14F30]', 'text-white');
@@ -1367,7 +1662,7 @@
         if (timerState.remainingSeconds > 0) {
           const step = Math.min(timerState.remainingSeconds, deltaSec);
           timerState.remainingSeconds -= step;
-          if (timerState.mode === 'focus') {
+          if (timerState.mode === 'focus' || timerState.mode === 'countdown') {
             timerState.elapsedFocusSeconds += step;
           }
           updateTimerUI();
@@ -1445,11 +1740,16 @@
       pauseTimer();
       playCompletionChime();
 
-      if (timerState.mode === 'focus') {
+      if (timerState.mode === 'focus' || timerState.mode === 'countdown') {
         const loggedMins = Math.max(1, Math.round(timerState.totalSeconds / 60));
-        logFocusSession(loggedMins, 'Pomodoro focus session');
-        showToast(`Focus session complete! Logged ${loggedMins} mins.`, 'success');
-        setTimerMode('shortBreak');
+        const noteLabel = timerState.mode === 'countdown' ? 'Countdown timer session' : 'Pomodoro focus session';
+        logFocusSession(loggedMins, noteLabel);
+        showToast(`${timerState.mode === 'countdown' ? 'Countdown' : 'Focus session'} complete! Logged ${loggedMins} min${loggedMins === 1 ? '' : 's'}.`, 'success');
+        if (timerState.mode === 'focus') {
+          setTimerMode('shortBreak');
+        } else {
+          resetTimer();
+        }
       } else {
         showToast('Break finished! Ready for your next focus session.', 'info');
         setTimerMode('focus');
@@ -1473,7 +1773,7 @@
         return;
       }
 
-      if (timerState.mode !== 'focus') {
+      if (timerState.mode !== 'focus' && timerState.mode !== 'countdown') {
         resetTimer();
         return;
       }
@@ -1482,8 +1782,9 @@
         showToast('Focus for at least 1 minute before logging.', 'warning');
         return;
       }
+      const noteLabel = timerState.mode === 'countdown' ? 'Countdown timer session' : 'Pomodoro focus session';
       pauseTimer();
-      logFocusSession(elapsedMins, 'Pomodoro focus session');
+      logFocusSession(elapsedMins, noteLabel);
       playCompletionChime();
       showToast(`Logged ${elapsedMins} minutes of focus time!`, 'success');
       resetTimer();
@@ -1810,7 +2111,6 @@
 
       document.getElementById('kpi-courses-count').textContent = `${appState.subjects.length} Course${appState.subjects.length === 1 ? '' : 's'}`;
 
-      // Weekly target progress
       const last7 = new Set(getLast7DaysDates());
       const weekMins = appState.sessions.filter(s => last7.has(s.date)).reduce((acc, s) => acc + s.durationMinutes, 0);
       const weekHours = weekMins / 60;
@@ -1820,7 +2120,6 @@
       document.getElementById('kpi-weekly-progress').textContent = `${hoursPct}%`;
       document.getElementById('kpi-weekly-hours').textContent = `${weekHours.toFixed(1)} / ${totalTargetHours.toFixed(1)} hrs target`;
 
-      // Syllabus & Task Percentages for Concentric Learn Tracking Rings
       let totalTopics = 0;
       let doneTopics = 0;
       appState.subjects.forEach(s => {
@@ -1842,7 +2141,6 @@
       document.getElementById('ring-label-syllabus').textContent = `${syllabusPct}%`;
       document.getElementById('ring-label-tasks').textContent = `${tasksPct}%`;
 
-      // 28-Day Activity Dot Matrix
       const dotMatrixEl = document.getElementById('activity-dot-matrix');
       if (dotMatrixEl) {
         const activeDates = new Set(appState.sessions.map(s => s.date));
@@ -1928,13 +2226,11 @@
     }
 
     function renderDashboardWidgets() {
-      // Render Dashboard Striped Chart
       renderStripedBarChart(
         document.getElementById('dashboard-striped-chart'),
         document.getElementById('dashboard-striped-labels')
       );
 
-      // 1. Priority Assignments on Dashboard
       const dashTasksEl = document.getElementById('dashboard-tasks-list');
       const pendingTasks = appState.tasks.filter(t => !t.completed).slice(0, 5);
 
@@ -1966,7 +2262,6 @@
         }).join('');
       }
 
-      // 2. Course Progress Bars on Dashboard
       const dashSubEl = document.getElementById('dashboard-subject-progress');
       const last7 = new Set(getLast7DaysDates());
 
@@ -2224,6 +2519,7 @@
 
     function renderAll() {
       renderDemoBanner();
+      renderExamCountdownSelect();
       populateSubjectDropdowns();
       updateTimerUI();
       renderDashboardKPIs();
@@ -2265,6 +2561,11 @@
       if (modalId === 'manual-session-modal') {
         document.getElementById('manual-session-date').value = getLocalDateString();
       }
+      if (modalId === 'exam-countdown-modal') {
+        const nextWeek = new Date();
+        nextWeek.setDate(nextWeek.getDate() + 7);
+        document.getElementById('exam-cd-date-input').value = getLocalDateString(nextWeek);
+      }
       if (modalId === 'data-modal') {
         hideClearConfirmation();
       }
@@ -2273,77 +2574,6 @@
 
     function closeModal(modalId) {
       document.getElementById(modalId).classList.add('hidden');
-    }
-
-    function downloadBrandLogoPNG() {
-      const svgMarkup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="256" height="256" fill="none">
-        <defs>
-          <linearGradient id="g1" x1="16" y1="12" x2="112" y2="116" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#F38164"/>
-            <stop offset="100%" stop-color="#E56343"/>
-          </linearGradient>
-        </defs>
-        <rect x="6" y="6" width="116" height="116" rx="34" fill="url(#g1)"/>
-        <rect x="11" y="11" width="106" height="106" rx="29" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="2"/>
-        <path d="M64 34L24 53L64 72L104 53L64 34Z" fill="#FFFFFF"/>
-        <path d="M40 64.5V80.5C40 87.5 50.7 93 64 93C77.3 93 88 87.5 88 80.5V64.5L64 76L40 64.5Z" fill="#FFF4F0"/>
-        <path d="M96 56.5V79" stroke="#F3C152" stroke-width="4.5" stroke-linecap="round"/>
-        <circle cx="96" cy="83" r="4.5" fill="#F3C152"/>
-        <circle cx="64" cy="53" r="3.5" fill="#E56343"/>
-      </svg>`;
-
-      const img = new Image();
-      const svgBlob = new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(svgBlob);
-
-      img.onload = function () {
-        const canvas = document.createElement('canvas');
-        canvas.width = 256;
-        canvas.height = 256;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, 256, 256);
-        URL.revokeObjectURL(url);
-
-        canvas.toBlob(function (pngBlob) {
-          const pngUrl = URL.createObjectURL(pngBlob);
-          const a = document.createElement('a');
-          a.href = pngUrl;
-          a.download = 'focusflow-logo.png';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          URL.revokeObjectURL(pngUrl);
-          showToast('Downloaded focusflow-logo.png! Ready for Google Sites.', 'success');
-        }, 'image/png');
-      };
-      img.src = url;
-    }
-
-    function copyWholeAppCode() {
-      const fullHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(fullHtml)
-          .then(() => showToast('Full HTML code copied! Paste it into GitHub as index.html.', 'success'))
-          .catch(() => fallbackCopyCode(fullHtml));
-      } else {
-        fallbackCopyCode(fullHtml);
-      }
-    }
-
-    function fallbackCopyCode(text) {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        showToast('Full HTML code copied! Paste it into GitHub as index.html.', 'success');
-      } catch (err) {
-        showToast('Unable to copy automatically. Please use Export in the editor.', 'error');
-      }
-      textarea.remove();
     }
 
     function exportDataJSON() {
@@ -2416,6 +2646,9 @@
         chartMode: 'daily',
         isDemoData: false,
         demoBannerDismissed: true,
+        customCountdownSeconds: 15 * 60,
+        selectedCountdownId: '',
+        countdowns: [],
         settings: { focusMinutes: 25, shortBreakMinutes: 5, longBreakMinutes: 15, soundEnabled: true },
         subjects: [],
         tasks: [],
@@ -2435,7 +2668,9 @@
       document.getElementById('task-date-input').value = getLocalDateString();
       setTimerMode('focus');
       switchTab(appState.activeTab || 'dashboard');
+      startExamCountdownClock();
     });
   </script>
 </body>
 </html>
+```[cite: 2]
