@@ -2,6 +2,8 @@ FocusFlow is a lightweight, zero-backend study tracking and academic planning we
 
 Key Features:
 
+Live Ticking Countdown (Days : Hours : Mins : Secs): Displays a real-time, second-by-second countdown to your upcoming exam, midterm, or project submission deadline.
+
 Focus Timer & Stopwatch: Customizable Pomodoro countdowns (Focus, Short Break, Long Break) plus a live Stopwatch with lap split tracking.
 
 Course & Syllabus Tracker: Organize courses with weekly hour targets and interactive chapter checklists.
